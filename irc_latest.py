@@ -2,6 +2,7 @@ from datetime import datetime
 import sys
 
 from elasticsearch import Elasticsearch
+import utils
 
 HOST = "dodb"
 
@@ -24,6 +25,6 @@ def get_latest(num, chan):
 
 if __name__ == "__main__":
     chan = sys.argv[1] if len(sys.argv) > 1 else ""
-    recs = get_latest(5, chan)
+    recs = get_latest(10, chan)
     for rec in recs:
-        print(rec["posted"], rec["nick"], rec["remark"])
+        print(rec["id"], rec["posted"], rec["nick"], rec["remark"])

@@ -48,9 +48,9 @@ else:
             },
         }
 
+kwargs["size"] = MAX_RECS
 if not delete:
     kwargs["sort"] = ["posted:asc"]
-    kwargs["size"] = MAX_RECS
 
 r = mthd("irclog", **kwargs)
 if delete:

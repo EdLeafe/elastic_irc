@@ -1,5 +1,7 @@
+import copy
 from datetime import datetime
 from functools import wraps, update_wrapper
+from hashlib import blake2b
 import logging
 from math import log
 import os
@@ -103,3 +105,17 @@ def human_fmt(num):
         return "0 bytes"
     if num == 1:
         return "1 byte"
+
+
+def gen_key(orig_rec, digest_size=8):
+    """Generates an MD5 hash by concatenating the values in the dictionary."""
+    # Don't modify the original dict
+    rec = copy.deepcopy(orig_rec)
+    # Remove the 'id' field, if present
+    rec.pop("id", None)
+    m = blake2b(digest_size=digest_size)
+    txt_vals = ["%s" % val for val in rec.values()]
+    txt_vals.sort()
+    txt = "".join(txt_vals)
+    m.update(txt.encode("utf-8"))
+    return m.hexdigest()
