@@ -3,6 +3,7 @@ import sys
 
 from elasticsearch import Elasticsearch
 
+#import trace
 
 def extract_records(resp):
     return [r["_source"] for r in resp["hits"]["hits"]]

@@ -12,12 +12,8 @@ import requests
 HOST = "dodb"
 es_client = Elasticsearch(host=HOST)
 
-CHANNELS = ("#openstack-nova",
-        "#openstack-placement",
-        "#openstack-dev",
-        "#openstack-sdks",
-        "#openstack-neutron",
-        )
+with open("CHANNELS") as ff:
+    CHANNELS = [chan.strip() for chan in ff.readlines()]
 DEFAULT_START_DATE = dt.date(2017, 1, 1)
 URI_PAT = "http://eavesdrop.openstack.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
 NICK_PAT = re.compile(r"<([^>]+)> (.*)")
@@ -26,7 +22,8 @@ ctl_chars = dict.fromkeys(range(32))
 del ctl_chars[10], ctl_chars[13]
 CTRL_CHAR_MAP = ctl_chars
 
-SPAM_FILE = "/home/ed/projects/elastic/SPAM_PHRASES"
+
+SPAM_FILE = os.path.join(os.getcwd(), "SPAM_PHRASES")
 ignored_nicks = set()
 with open(SPAM_FILE, "r") as ff:
     spam_phrases = [ln for ln in ff.read().splitlines() if ln]

@@ -12,6 +12,7 @@ import pymysql
 main_cursor = None
 HOST = "dodb"
 conn = None
+CURDIR = os.getcwd()
 
 LOG = logging.getLogger(__name__)
 
@@ -26,7 +27,8 @@ def runproc(cmd):
 
 
 def _parse_creds():
-    with open("/home/ed/projects/elastic/.dbcreds") as ff:
+    fpath = os.path.join(CURDIR, .dbcreds)
+    with open(fpath) as ff:
         lines = ff.read().splitlines()
     ret = {}
     for ln in lines:
