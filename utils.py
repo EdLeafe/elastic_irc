@@ -29,7 +29,7 @@ def runproc(cmd):
 
 
 def _parse_creds():
-    fpath = os.path.join(CURDIR, .dbcreds)
+    fpath = os.path.join(CURDIR, ".dbcreds")
     with open(fpath) as ff:
         lines = ff.read().splitlines()
     ret = {}
