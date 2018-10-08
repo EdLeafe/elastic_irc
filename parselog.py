@@ -23,7 +23,8 @@ ctl_chars = dict.fromkeys(range(32))
 del ctl_chars[10], ctl_chars[13]
 CTRL_CHAR_MAP = ctl_chars
 
-SPAM_FILE = os.path.expanduser("~/projects/elastic/SPAM_PHRASES")
+
+SPAM_FILE = os.path.join(os.getcwd(), "SPAM_PHRASES")
 ignored_nicks = set()
 with open(SPAM_FILE, "r") as ff:
     spam_phrases = [ln for ln in ff.read().splitlines() if ln]
