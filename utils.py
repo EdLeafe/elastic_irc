@@ -110,7 +110,7 @@ def human_fmt(num):
 
 
 def gen_key(orig_rec, digest_size=8):
-    """Generates an MD5 hash by concatenating the values in the dictionary."""
+    """Generates a hash value by concatenating the values in the dictionary."""
     # Don't modify the original dict
     rec = copy.deepcopy(orig_rec)
     # Remove the 'id' field, if present
@@ -121,3 +121,8 @@ def gen_key(orig_rec, digest_size=8):
     txt = "".join(txt_vals)
     m.update(txt.encode("utf-8"))
     return m.hexdigest()
+
+
+def extract_records(resp):
+    return [r["_source"] for r in resp["hits"]["hits"]]
+

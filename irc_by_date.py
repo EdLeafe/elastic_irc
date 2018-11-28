@@ -11,10 +11,12 @@ es = Elasticsearch(host=HOST)
 def extract_records(resp):
     return [r["_source"] for r in resp["hits"]["hits"]]
 
-
 delete = False
 chan = None
-start = sys.argv[1]
+logdate = sys.argv[1]
+conv_date = dt.datetime.strptime(logdate, "%Y-%m-%d")
+conv_next = conv_date + dt.timedelta(days=1)
+nextdate = conv_next.strftime("%Y-%m-%d")
 args = sys.argv[2:]
 if args:
     if "-d" in args:
@@ -34,7 +36,7 @@ if chan:
                             },
                         "must": {
                             "range" : {
-                                "posted" : {"gte": start}}
+                                "posted" : {"gte": logdate, "lt": nextdate}}
                             }
                         }
                     }
@@ -43,14 +45,14 @@ if chan:
 else:
     kwargs = {"body": {
                 "query": {
-                    "range" : {"posted" : {"gte": start}}
+                    "range" : {"posted" : {"gte": logdate, "lt": nextdate}}
                 }
             },
         }
 
+kwargs["size"] = MAX_RECS
 if not delete:
     kwargs["sort"] = ["posted:asc"]
-    kwargs["size"] = MAX_RECS
 
 r = mthd("irclog", **kwargs)
 if delete:
@@ -58,6 +60,6 @@ if delete:
 else:
     numrecs = len(extract_records(r))
     if numrecs == MAX_RECS:
-        print("There are at least %s records since %s." % (numrecs, start))
+        print("There are at least %s records on %s." % (numrecs, logdate))
     else:
-        print("There are %s records since %s." % (numrecs, start))
+        print("There are %s records on %s." % (numrecs, logdate))

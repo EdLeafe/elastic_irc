@@ -22,7 +22,7 @@ if chan:
     r = es.search("irclog", doc_type="irc", body=body, size=0)
 else:
     r = es.search("irclog", doc_type="irc", size=0)
-total = r["hits"]["total"]
+total = "{:,}".format(r["hits"]["total"])
 if chan:
     print("There are %s documents in the %s channel." % (total, chan))
 else:

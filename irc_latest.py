@@ -26,5 +26,7 @@ def get_latest(num, chan):
 if __name__ == "__main__":
     chan = sys.argv[1] if len(sys.argv) > 1 else ""
     recs = get_latest(10, chan)
+    print("NUM", len(recs))
     for rec in recs:
-        print(rec["id"], rec["posted"], rec["nick"], rec["remark"])
+        print(rec["id"], rec["channel"], rec["posted"], rec["nick"],
+                rec["remark"])

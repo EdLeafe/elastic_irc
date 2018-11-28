@@ -38,8 +38,9 @@ def parse_line(ln):
     return (from_time(ln[:19]), ln[21:])
 
 
-def nextdate(day):
-    while day < dt.date.today():
+def nextdate(day, end_day=None):
+    end_day = end_day or dt.date.today()
+    while day < end_day:
         yield day
         day += ONEDAY
     raise StopIteration
@@ -54,22 +55,38 @@ def ignore_spam(nick, remark):
     return nick in ignored_nicks
 
 
-def get_data(start_day, chan=None):
+def get_data(start_day, end_day=None, chan=None):
     if chan is None:
         chans = CHANNELS
     else:
         chans = [chan]
+    good2go = False
     for channel in chans:
+        good2go = True
+        # Use this for when an import fails to avoid re-doing the completed
+        # channels. I added this when the import crashed while importing the
+        # #openstack-infra channel
+#        if channel == "#openstack-infra":
+#            good2go = True
+        if not good2go:
+            print("Skipping", channel)
+            continue
         esc_chan = quote(channel)
-        for day in nextdate(start_day):
+        for day in nextdate(start_day, end_day):
             print("Starting %s-%s-%s for %s" % (day.year, day.month, day.day,
                     channel))
             vals = {"esc_chan": esc_chan, "year": day.year,
                     "month": str(day.month).zfill(2),
                     "day": str(day.day).zfill(2)}
             uri = URI_PAT % vals
-            resp = requests.get(uri)
-            if resp.status_code > 299:
+            retries = 3
+            while retries:
+                try:
+                    resp = requests.get(uri)
+                    break
+                except requests.exceptions.ConnectionError:
+                    retries -= 1
+            if retries == 0 or resp.status_code > 299:
                 # Error; skip it
                 continue
             text = resp.text.translate(CTRL_CHAR_MAP)
@@ -98,15 +115,15 @@ def get_data(start_day, chan=None):
                 doc["id"] = utils.gen_key(doc)
                 yield {"_index": "irclog",
                         "_type": "irc",
+                        "_op_type": "index",
+                        "_id": doc["id"],
                         "_source": doc}
 
 
-def import_irc(start_day, chan=None):
+def import_irc(start_day, end_day=None, chan=None):
     start_time = dt.datetime.now()
-    with open("import.log", "a") as ff:
-        ff.write("Running %s\n" % start_time)
-
-    success, failures = bulk(es_client, get_data(start_day, chan=chan))
+    success, failures = bulk(es_client, get_data(start_day, end_day,
+            chan=chan))
     print("SUCCESS", success)
     print("FAILS", failures)
     print("Elapsed:", dt.datetime.now() - start_time)
@@ -116,9 +133,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="IRC Log Parsing")
     parser.add_argument("--start", "-s", action="append",
             help="Start date for log parsing.")
+    parser.add_argument("--end", "-e", action="append",
+            help="End date for log parsing. Optional; defaults to today.")
     args = parser.parse_args()
     if args.start:
         start_day = dt.datetime.strptime(args.start[0], "%Y-%m-%d").date()
     else:
         start_day = DEFAULT_START_DATE
-    import_irc(start_day)
+    if args.end:
+        end_day = dt.datetime.strptime(args.end[0], "%Y-%m-%d").date()
+    else:
+        end_day = dt.date.today()
+    import_irc(start_day, end_day)

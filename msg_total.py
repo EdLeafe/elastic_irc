@@ -10,5 +10,5 @@ HOST = "dodb"
 es = Elasticsearch(host=HOST)
 
 r = es.search("email", doc_type="mail", size=0)
-total = r["hits"]["total"]
+total = "{:,}".format(r["hits"]["total"])
 print("There are %s documents in the index." % total)
