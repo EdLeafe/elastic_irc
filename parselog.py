@@ -10,7 +10,7 @@ from elasticsearch.helpers import bulk
 import requests
 import utils
 
-HOST = "dodb"
+HOST = "dodata"
 es_client = Elasticsearch(host=HOST)
 
 with open("CHANNELS") as ff:
@@ -82,7 +82,7 @@ def get_data(start_day, end_day=None, chan=None):
             retries = 3
             while retries:
                 try:
-                    resp = requests.get(uri)
+                    resp = requests.get(uri, timeout=10)
                     break
                 except requests.exceptions.ConnectionError:
                     retries -= 1

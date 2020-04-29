@@ -6,7 +6,7 @@ def extract_records(resp):
     return [r["_source"] for r in resp["hits"]["hits"]]
 
 
-HOST = "dodb"
+HOST = "dodata"
 es = Elasticsearch(host=HOST)
 
 r = es.search("email", doc_type="mail", size=0)

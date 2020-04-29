@@ -1,4 +1,6 @@
-curl -X PUT dodb:9200/irclog -H 'Content-Type: application/json' -d '{"mappings": {
+curl -X DELETE dodata:9200/irclog
+
+curl -X PUT dodata:9200/irclog -H 'Content-Type: application/json' -d '{"mappings": {
     "irc": {
         "properties": {
             "channel": {

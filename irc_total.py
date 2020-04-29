@@ -9,7 +9,7 @@ def extract_records(resp):
     return [r["_source"] for r in resp["hits"]["hits"]]
 
 
-HOST = "dodb"
+HOST = "dodata"
 es = Elasticsearch(host=HOST)
 
 chan = sys.argv[1] if len(sys.argv) > 1 else ""

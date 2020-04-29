@@ -4,7 +4,7 @@ import sys
 from elasticsearch import Elasticsearch
 import utils
 
-HOST = "dodb"
+HOST = "dodata"
 
 
 def extract_records(resp):

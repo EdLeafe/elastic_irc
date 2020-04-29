@@ -2,7 +2,7 @@ import sys
 
 from elasticsearch import Elasticsearch
 
-HOST = "dodb"
+HOST = "dodata"
 es = Elasticsearch(host=HOST)
 
 

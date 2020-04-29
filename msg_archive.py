@@ -5,7 +5,7 @@ import utils
 
 # Get messages in batches of 100
 BATCH_SIZE = 100
-HOST = "dodb"
+HOST = "dodata"
 es_client = Elasticsearch(host=HOST)
 
 # My original names suck, so...
@@ -38,6 +38,7 @@ def get_data(currmsg=0, verbose=False):
                 # Old lists we don't need
                 continue
             doc = {FIELD_MAP[fld]: val for fld, val in rec.items()}
+            doc["fulltext_subject"] = doc["subject"]
             doc["id"] = utils.gen_key(doc)
             yield {"_index": "email",
                     "_type": "mail",

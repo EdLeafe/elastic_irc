@@ -12,7 +12,7 @@ import pymysql
 
 
 main_cursor = None
-HOST = "dodb"
+HOST = "dodata"
 conn = None
 CURDIR = os.getcwd()
 

@@ -4,7 +4,7 @@ from elasticsearch import Elasticsearch
 
 import utils
 
-HOST = "dodb"
+HOST = "dodata"
 es = Elasticsearch(host=HOST)
 
 field_map = {

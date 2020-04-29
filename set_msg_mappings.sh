@@ -1,4 +1,6 @@
-curl -X PUT dodb:9200/email -H 'Content-Type: application/json' -d '{"mappings": {
+curl -X DELETE dodata:9200/email
+
+curl -X PUT dodata:9200/email -H 'Content-Type: application/json' -d '{"mappings": {
     "mail": {
         "properties": {
             "msg_num": {
@@ -6,6 +8,8 @@ curl -X PUT dodb:9200/email -H 'Content-Type: application/json' -d '{"mappings":
             "list_name": {
                 "type": "keyword"},
             "subject": {
+                "type": "keyword"},
+            "fulltext_subject": {
                 "type": "text",
                 "analyzer": "standard"},
             "from": {

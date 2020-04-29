@@ -4,7 +4,7 @@ import sys
 from elasticsearch import Elasticsearch
 
 MAX_RECS = 10000
-HOST = "dodb"
+HOST = "dodata"
 es = Elasticsearch(host=HOST)
 
 
