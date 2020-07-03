@@ -19,10 +19,10 @@ if chan:
             "term": {"channel": chan}
             }
         }
-    r = es.search("irclog", doc_type="irc", body=body, size=0)
+    r = es.count(index="irclog", body=body)
 else:
-    r = es.search("irclog", doc_type="irc", size=0)
-total = "{:,}".format(r["hits"]["total"])
+    r = es.count(index="irclog")
+total = r["count"]
 if chan:
     print("There are %s documents in the %s channel." % (total, chan))
 else:

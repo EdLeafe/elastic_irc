@@ -15,9 +15,9 @@ def get_latest(num, chan):
     es = Elasticsearch(host=HOST)
     if chan:
         body = {"query": {"match" : {"channel" : chan}}}
-        r = es.search("irclog", body=body, size=num, sort="posted:desc")
+        r = es.search(index="irclog", body=body, size=num, sort="posted:desc")
     else:
-        r = es.search("irclog", size=num, sort="posted:desc")
+        r = es.search(index="irclog", size=num, sort="posted:desc")
 
     records = extract_records(r)
     return records

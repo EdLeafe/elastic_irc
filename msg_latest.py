@@ -13,7 +13,7 @@ def extract_records(resp):
 
 def get_latest(num):
     es = Elasticsearch(host=HOST)
-    r = es.search("email", size=num, sort="posted:desc")
+    r = es.search("email", size=num, sort="posted.keyword:desc")
     records = extract_records(r)
     return records
 

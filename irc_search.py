@@ -8,15 +8,11 @@ HOST = "dodata"
 es = Elasticsearch(host=HOST)
 
 field_map = {
-        "msg_num": "keyword",
-        "list_name": "keyword",
-        "subject": "text",
-        "from": "keyword",
+        "channel": "keyword",
+        "nick": "keyword",
         "posted": "keyword",
-        "message_id": "keyword",
-        "replyto_id": "keyword",
-        "body": "text",
-        "id": "id",
+        "remark": "text",
+        "id": "text",
         }
 
 if len(sys.argv) != 3:
@@ -34,11 +30,12 @@ if field_map[field] == "keyword":
     kwargs = {"body": {"query": {"match" : {field: val}}}}
 else:
     kwargs = {"body": {"query": {"match_phrase" : {field: val}}}}
-kwargs["size"] = 10000
-kwargs["sort"] = ["msg_num:asc"]
+kwargs["size"] = 10
+kwargs["sort"] = ["posted:asc"]
 
-print("KWARGS", kwargs)
-r = es.search(index="email", **kwargs)
+r = es.search("irclog", **kwargs)
+print(r)
 recs = utils.extract_records(r)
 print(recs)
 print("\nThere were %s records found" % len(recs))
+print(kwargs)

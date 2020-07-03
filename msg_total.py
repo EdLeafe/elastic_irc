@@ -9,6 +9,6 @@ def extract_records(resp):
 HOST = "dodata"
 es = Elasticsearch(host=HOST)
 
-r = es.search("email", doc_type="mail", size=0)
-total = "{:,}".format(r["hits"]["total"])
+r = es.count(index="email")
+total = r["count"]
 print("There are %s documents in the index." % total)

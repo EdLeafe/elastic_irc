@@ -3,7 +3,6 @@ import sys
 
 from elasticsearch import Elasticsearch
 
-MAX_RECS = 10000
 HOST = "dodata"
 es = Elasticsearch(host=HOST)
 
@@ -22,7 +21,7 @@ if args:
         args.remove("-d")
     if args:
         chan = args[0]
-mthd = es.delete_by_query if delete else es.search
+mthd = es.delete_by_query if delete else es.count
 
 if chan:
     kwargs = {"body": {
@@ -48,16 +47,9 @@ else:
             },
         }
 
-if not delete:
-    kwargs["sort"] = ["posted:asc"]
-    kwargs["size"] = MAX_RECS
-
-r = mthd("irclog", **kwargs)
+r = mthd(index="irclog", **kwargs)
 if delete:
     print("%s records have been deleted." % r.get("deleted"))
 else:
-    numrecs = len(extract_records(r))
-    if numrecs == MAX_RECS:
-        print("There are at least %s records since %s." % (numrecs, start))
-    else:
-        print("There are %s records since %s." % (numrecs, start))
+    numrecs = r["count"]
+    print("There are %s records since %s." % (numrecs, start))

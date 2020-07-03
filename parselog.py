@@ -123,7 +123,7 @@ def get_data(start_day, end_day=None, chan=None):
 def import_irc(start_day, end_day=None, chan=None):
     start_time = dt.datetime.now()
     success, failures = bulk(es_client, get_data(start_day, end_day,
-            chan=chan))
+            chan=chan), max_retries=5)
     print("SUCCESS", success)
     print("FAILS", failures)
     print("Elapsed:", dt.datetime.now() - start_time)
