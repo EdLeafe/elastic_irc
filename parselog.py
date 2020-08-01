@@ -2,6 +2,7 @@ import argparse
 import datetime as dt
 import os
 import re
+import time
 from  urllib.parse import quote
 import warnings
 
@@ -9,6 +10,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 import requests
 import utils
+from utils import logit
 
 HOST = "dodata"
 es_client = Elasticsearch(host=HOST)
@@ -23,6 +25,7 @@ ctl_chars = dict.fromkeys(range(32))
 del ctl_chars[10], ctl_chars[13]
 CTRL_CHAR_MAP = ctl_chars
 
+last_channel = None
 
 SPAM_FILE = os.path.join(os.getcwd(), "SPAM_PHRASES")
 ignored_nicks = set()
@@ -43,7 +46,7 @@ def nextdate(day, end_day=None):
     while day < end_day:
         yield day
         day += ONEDAY
-    raise StopIteration
+#    raise StopIteration
 
 
 def ignore_spam(nick, remark):
@@ -56,10 +59,11 @@ def ignore_spam(nick, remark):
 
 
 def get_data(start_day, end_day=None, chan=None):
-    if chan is None:
-        chans = CHANNELS
-    else:
-        chans = [chan]
+    global last_channel
+    idx = 0
+    if chan:
+        idx = CHANNELS.index(chan)
+    chans = CHANNELS[idx:]
     good2go = False
     for channel in chans:
         good2go = True
@@ -71,6 +75,8 @@ def get_data(start_day, end_day=None, chan=None):
         if not good2go:
             print("Skipping", channel)
             continue
+        # In case this crashes, we know where to re-start
+        last_channel = channel
         esc_chan = quote(channel)
         for day in nextdate(start_day, end_day):
             print("Starting %s-%s-%s for %s" % (day.year, day.month, day.day,
@@ -85,6 +91,8 @@ def get_data(start_day, end_day=None, chan=None):
                     resp = requests.get(uri, timeout=10)
                     break
                 except requests.exceptions.ConnectionError:
+                    print("Failed {}; retrying...")
+                    time.sleep((5 - retries) ** 2)
                     retries -= 1
             if retries == 0 or resp.status_code > 299:
                 # Error; skip it
@@ -113,17 +121,24 @@ def get_data(start_day, end_day=None, chan=None):
                     "remark": remark,
                 }
                 doc["id"] = utils.gen_key(doc)
+#                logit("Channel:", channel, "; Nick:", nick, ", Date:", doc["posted"])
                 yield {"_index": "irclog",
-                        "_type": "irc",
                         "_op_type": "index",
                         "_id": doc["id"],
                         "_source": doc}
 
 
 def import_irc(start_day, end_day=None, chan=None):
+    global last_channel
+    last_channel = chan or last_channel
     start_time = dt.datetime.now()
-    success, failures = bulk(es_client, get_data(start_day, end_day,
-            chan=chan), max_retries=5)
+    while True:
+        try:
+            success, failures = bulk(es_client, get_data(start_day, end_day, chan=last_channel),
+                    max_retries=5)
+            break
+        except Exception:
+            pass
     print("SUCCESS", success)
     print("FAILS", failures)
     print("Elapsed:", dt.datetime.now() - start_time)
@@ -135,6 +150,7 @@ if __name__ == "__main__":
             help="Start date for log parsing.")
     parser.add_argument("--end", "-e", action="append",
             help="End date for log parsing. Optional; defaults to today.")
+    parser.add_argument("--chan", "-c", help="Channel to start parsing (alphabetically)")
     args = parser.parse_args()
     if args.start:
         start_day = dt.datetime.strptime(args.start[0], "%Y-%m-%d").date()
@@ -144,4 +160,4 @@ if __name__ == "__main__":
         end_day = dt.datetime.strptime(args.end[0], "%Y-%m-%d").date()
     else:
         end_day = dt.date.today()
-    import_irc(start_day, end_day)
+    import_irc(start_day, end_day, chan=args.chan)

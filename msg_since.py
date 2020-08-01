@@ -21,18 +21,23 @@ if args:
         args.remove("-d")
 mthd = es.delete_by_query if delete else es.search
 
-kwargs = {"body": {
-            "query": {
-                "range" : {"posted" : {"gte": start}}
-            }
-        },
+#kwargs = {"body": {
+#            "query": {
+#                "range" : {"posted" : {"gte": start}}
+#            }
+#        },
+#    }
+kwargs = {
+    "query": {
+        "range" : {"posted" : {"gte": start}}
     }
+}
 
 if not delete:
     kwargs["sort"] = ["posted:asc"]
     kwargs["size"] = MAX_RECS
 
-r = mthd("email", **kwargs)
+r = mthd(index="email", body=kwargs)
 if delete:
     print("%s records have been deleted." % r.get("deleted"))
 else:

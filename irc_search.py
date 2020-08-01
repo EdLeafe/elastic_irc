@@ -1,11 +1,8 @@
 import sys
 
-from elasticsearch import Elasticsearch
-
 import utils
 
-HOST = "dodata"
-es = Elasticsearch(host=HOST)
+es = utils.get_elastic_client()
 
 field_map = {
         "channel": "keyword",
@@ -15,7 +12,7 @@ field_map = {
         "id": "text",
         }
 
-if len(sys.argv) != 3:
+if len(sys.argv) < 3:
     print("You must supply a field to search and a value")
     sys.exit()
 
@@ -26,16 +23,27 @@ if field not in field_map:
             (field, str(list(field_map.keys()))))
     sys.exit()
 
+size = sys.argv[3] if len(sys.argv) > 3 else 10
+
 if field_map[field] == "keyword":
     kwargs = {"body": {"query": {"match" : {field: val}}}}
 else:
     kwargs = {"body": {"query": {"match_phrase" : {field: val}}}}
-kwargs["size"] = 10
-kwargs["sort"] = ["posted:asc"]
+kwargs["size"] = size
+kwargs["sort"] = ["posted:desc"]
 
-r = es.search("irclog", **kwargs)
-print(r)
+r = es.search(index="irclog", **kwargs)
+total = r["hits"]["total"]["value"]
+relation = r["hits"]["total"]["relation"]
+#print(r)
 recs = utils.extract_records(r)
-print(recs)
-print("\nThere were %s records found" % len(recs))
-print(kwargs)
+if relation == "eq":
+    print("\nThere were {} records found".format(total))
+elif relation == "gte":
+    print("\nThere were more than {} records found".format(total))
+if recs:
+    print("Here are the {} most recent:".format(size))
+    for rec in recs:
+        print(rec)
+
+#print(kwargs)

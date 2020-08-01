@@ -8,6 +8,7 @@ import os
 from subprocess import Popen, PIPE
 import uuid
 
+import elasticsearch
 import pymysql
 
 
@@ -29,7 +30,7 @@ def runproc(cmd):
 
 
 def _parse_creds():
-    fpath = os.path.join(CURDIR, ".dbcreds")
+    fpath = os.path.expanduser("~/.dbcreds")
     with open(fpath) as ff:
         lines = ff.read().splitlines()
     ret = {}
@@ -42,9 +43,9 @@ def _parse_creds():
 def connect():
     cls = pymysql.cursors.DictCursor
     creds = _parse_creds()
-    ret = pymysql.connect(host=HOST, user=creds["DB_USERNAME"],
-            passwd=creds["DB_PWD"], db=creds["DB_NAME"], charset="utf8",
-            cursorclass=cls)
+    db = creds.get("DB_NAME") or "webdata"
+    ret = pymysql.connect(host=HOST, user=creds["DB_USERNAME"], passwd=creds["DB_PWD"],
+            db=db, charset="utf8", cursorclass=cls)
     return ret
 
 
@@ -66,6 +67,13 @@ def get_cursor():
 
 def commit():
     conn.commit()
+
+
+def logit(*args):
+    argtxt = [str(arg) for arg in args]
+    msg = "  ".join(argtxt) + "\n"
+    with open("LOGOUT", "a") as ff:
+        ff.write(msg)
 
 
 def debugout(*args):
@@ -107,6 +115,30 @@ def human_fmt(num):
         return "0 bytes"
     if num == 1:
         return "1 byte"
+
+
+def get_elastic_client():
+    return elasticsearch.Elasticsearch(host=HOST)
+
+
+def _get_mapping():
+    es_client = get_elastic_client()
+    return es_client.indices.get_mapping()
+
+
+def get_indices():
+    return list(_get_mapping().keys())
+
+
+def get_mapping(index):
+    """Returns the field definitions for the specified index"""
+    props = _get_mapping().get(index, {}).get("mappings", {}).get("properties", {})
+    return props
+
+
+def get_fields(index):
+    """Returns just the field names for the specified index"""
+    return get_mapping(index).keys()
 
 
 def gen_key(orig_rec, digest_size=8):

@@ -3,8 +3,8 @@ from elasticsearch.helpers import bulk
 
 import utils
 
-# Get messages in batches of 100
-BATCH_SIZE = 100
+# Get messages in batches of 256
+BATCH_SIZE = 256
 HOST = "dodata"
 es_client = Elasticsearch(host=HOST)
 
@@ -41,13 +41,12 @@ def get_data(currmsg=0, verbose=False):
             doc["fulltext_subject"] = doc["subject"]
             doc["id"] = utils.gen_key(doc)
             yield {"_index": "email",
-                    "_type": "mail",
                     "_op_type": "index",
                     "_id": doc["id"],
                     "_source": doc}
 
 
 if __name__ == "__main__":
-    success, failures = bulk(es_client, get_data(verbose=True)) 
+    success, failures = bulk(es_client, get_data(currmsg=0, verbose=True)) 
     print("SUCCESS:", success)
     print("FAILED:", failures)
