@@ -1,6 +1,7 @@
 import datetime as dt
 import sys
 
+import click
 from elasticsearch import Elasticsearch
 
 MAX_RECS = 10000
@@ -11,55 +12,48 @@ es = Elasticsearch(host=HOST)
 def extract_records(resp):
     return [r["_source"] for r in resp["hits"]["hits"]]
 
-delete = False
-chan = None
-logdate = sys.argv[1]
-conv_date = dt.datetime.strptime(logdate, "%Y-%m-%d")
-conv_next = conv_date + dt.timedelta(days=1)
-nextdate = conv_next.strftime("%Y-%m-%d")
-args = sys.argv[2:]
-if args:
-    if "-d" in args:
-        delete = True
-        args.remove("-d")
-    if args:
-        chan = args[0]
-mthd = es.delete_by_query if delete else es.search
 
-if chan:
-    kwargs = {"body": {
+@click.command()
+@click.option("--chan", "-c", help="Only count record for the specified channel")
+@click.option("--delete", "-d", help="Delete the records on the specified date")
+@click.argument("logdate")
+def main(logdate, chan="", delete=False):
+    conv_date = dt.datetime.strptime(logdate, "%Y-%m-%d")
+    conv_next = conv_date + dt.timedelta(days=1)
+    nextdate = conv_next.strftime("%Y-%m-%d")
+    mthd = es.delete_by_query if delete else es.search
+
+    if chan:
+        kwargs = {
+            "body": {
                 "query": {
                     "bool": {
-                        "filter": {
-                            "term": {
-                                "channel": chan}
-                            },
-                        "must": {
-                            "range" : {
-                                "posted" : {"gte": logdate, "lt": nextdate}}
-                            }
-                        }
+                        "filter": {"term": {"channel": chan}},
+                        "must": {"range": {"posted": {"gte": logdate, "lt": nextdate}}},
                     }
                 }
             }
-else:
-    kwargs = {"body": {
-                "query": {
-                    "range" : {"posted" : {"gte": logdate, "lt": nextdate}}
-                }
-            },
+        }
+    else:
+        kwargs = {
+            "body": {"query": {"range": {"posted": {"gte": logdate, "lt": nextdate}}}},
         }
 
-kwargs["size"] = MAX_RECS
-if not delete:
-    kwargs["sort"] = ["posted:asc"]
+    kwargs["size"] = MAX_RECS
+    if not delete:
+        kwargs["sort"] = ["posted:asc"]
+        kwargs["_source"] = ["id"]
 
-r = mthd("irclog", **kwargs)
-if delete:
-    print("%s records have been deleted." % r.get("deleted"))
-else:
-    numrecs = len(extract_records(r))
-    if numrecs == MAX_RECS:
-        print("There are at least %s records on %s." % (numrecs, logdate))
+    r = mthd(index="irclog", **kwargs)
+    if delete:
+        print("%s records have been deleted." % r.get("deleted"))
     else:
-        print("There are %s records on %s." % (numrecs, logdate))
+        numrecs = len(extract_records(r))
+        if numrecs == MAX_RECS:
+            print("There are at least %s records on %s." % (numrecs, logdate))
+        else:
+            print("There are %s records on %s." % (numrecs, logdate))
+
+
+if __name__ == "__main__":
+    main()

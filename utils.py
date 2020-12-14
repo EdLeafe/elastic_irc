@@ -23,8 +23,7 @@ IntegrityError = pymysql.err.IntegrityError
 
 
 def runproc(cmd):
-    proc = Popen([cmd], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-            close_fds=True)
+    proc = Popen([cmd], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
     stdout_text, stderr_text = proc.communicate()
     return stdout_text, stderr_text
 
@@ -44,8 +43,14 @@ def connect():
     cls = pymysql.cursors.DictCursor
     creds = _parse_creds()
     db = creds.get("DB_NAME") or "webdata"
-    ret = pymysql.connect(host=HOST, user=creds["DB_USERNAME"], passwd=creds["DB_PWD"],
-            db=db, charset="utf8", cursorclass=cls)
+    ret = pymysql.connect(
+        host=HOST,
+        user=creds["DB_USERNAME"],
+        passwd=creds["DB_PWD"],
+        db=db,
+        charset="utf8",
+        cursorclass=cls,
+    )
     return ret
 
 
@@ -90,11 +95,13 @@ def nocache(view):
     def no_cache(*args, **kwargs):
         response = make_response(view(*args, **kwargs))
         response.headers["Last-Modified"] = datetime.now()
-        response.headers["Cache-Control"] = "no-store, no-cache, " \
-                "must-revalidate, post-check=0, pre-check=0, max-age=0"
+        response.headers["Cache-Control"] = (
+            "no-store, no-cache, " "must-revalidate, post-check=0, pre-check=0, max-age=0"
+        )
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "-1"
         return response
+
     return update_wrapper(no_cache, view)
 
 
@@ -103,11 +110,10 @@ def human_fmt(num):
     # Make sure that we get a valid input. If an invalid value is passed, we
     # want the exception to be raised.
     num = int(num)
-    units = list(zip(["bytes", "K", "MB", "GB", "TB", "PB"],
-            [0, 0, 1, 2, 2, 2]))
+    units = list(zip(["bytes", "K", "MB", "GB", "TB", "PB"], [0, 0, 1, 2, 2, 2]))
     if num > 1:
         exponent = min(int(log(num, 1024)), len(units) - 1)
-        quotient = float(num) / 1024**exponent
+        quotient = float(num) / 1024 ** exponent
         unit, num_decimals = units[exponent]
         format_string = "{:.%sf} {}" % (num_decimals)
         return format_string.format(quotient, unit)
@@ -157,4 +163,3 @@ def gen_key(orig_rec, digest_size=8):
 
 def extract_records(resp):
     return [r["_source"] for r in resp["hits"]["hits"]]
-

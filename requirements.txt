@@ -1,12 +1,13 @@
+PyMySQL
 asn1crypto
 certifi
 cffi
 chardet
+click
 cryptography
 elasticsearch
 idna
 pycparser
-PyMySQL
 requests
 six
 urllib3

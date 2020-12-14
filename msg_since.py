@@ -1,48 +1,37 @@
 import datetime as dt
 import sys
 
+import click
 from elasticsearch import Elasticsearch
+
+from utils import extract_records
+
 
 MAX_RECS = 10000
 HOST = "dodata"
 es = Elasticsearch(host=HOST)
 
 
-def extract_records(resp):
-    return [r["_source"] for r in resp["hits"]["hits"]]
+@click.command()
+@click.argument("start")
+@click.option("--delete", "-d", is_flag=True, help="Delete all records since the given date")
+def main(start, delete):
+    mthd = es.delete_by_query if delete else es.search
+    kwargs = {"query": {"range": {"posted": {"gte": start}}}}
+    if not delete:
+        kwargs["sort"] = [{"posted": "asc"}]
+        kwargs["size"] = MAX_RECS
 
-
-delete = False
-start = sys.argv[1]
-args = sys.argv[2:]
-if args:
-    if "-d" in args:
-        delete = True
-        args.remove("-d")
-mthd = es.delete_by_query if delete else es.search
-
-#kwargs = {"body": {
-#            "query": {
-#                "range" : {"posted" : {"gte": start}}
-#            }
-#        },
-#    }
-kwargs = {
-    "query": {
-        "range" : {"posted" : {"gte": start}}
-    }
-}
-
-if not delete:
-    kwargs["sort"] = ["posted:asc"]
-    kwargs["size"] = MAX_RECS
-
-r = mthd(index="email", body=kwargs)
-if delete:
-    print("%s records have been deleted." % r.get("deleted"))
-else:
-    numrecs = len(extract_records(r))
-    if numrecs == MAX_RECS:
-        print("There are at least %s records since %s." % (numrecs, start))
+    r = mthd(index="email", body=kwargs)
+    if delete:
+        print("%s records have been deleted." % r.get("deleted"))
     else:
-        print("There are %s records since %s." % (numrecs, start))
+        numrecs = len(extract_records(r))
+        if numrecs == MAX_RECS:
+            print("There are at least %s records since %s." % (numrecs, start))
+        else:
+            print("There are %s records since %s." % (numrecs, start))
+
+
+if __name__ == "__main__":
+    main()

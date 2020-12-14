@@ -3,7 +3,7 @@ import datetime as dt
 import os
 import re
 import time
-from  urllib.parse import quote
+from urllib.parse import quote
 import warnings
 
 from elasticsearch import Elasticsearch
@@ -46,6 +46,8 @@ def nextdate(day, end_day=None):
     while day < end_day:
         yield day
         day += ONEDAY
+
+
 #    raise StopIteration
 
 
@@ -70,8 +72,8 @@ def get_data(start_day, end_day=None, chan=None):
         # Use this for when an import fails to avoid re-doing the completed
         # channels. I added this when the import crashed while importing the
         # #openstack-infra channel
-#        if channel == "#openstack-infra":
-#            good2go = True
+        #        if channel == "#openstack-infra":
+        #            good2go = True
         if not good2go:
             print("Skipping", channel)
             continue
@@ -79,11 +81,13 @@ def get_data(start_day, end_day=None, chan=None):
         last_channel = channel
         esc_chan = quote(channel)
         for day in nextdate(start_day, end_day):
-            print("Starting %s-%s-%s for %s" % (day.year, day.month, day.day,
-                    channel))
-            vals = {"esc_chan": esc_chan, "year": day.year,
-                    "month": str(day.month).zfill(2),
-                    "day": str(day.day).zfill(2)}
+            print("Starting %s-%s-%s for %s" % (day.year, day.month, day.day, channel))
+            vals = {
+                "esc_chan": esc_chan,
+                "year": day.year,
+                "month": str(day.month).zfill(2),
+                "day": str(day.day).zfill(2),
+            }
             uri = URI_PAT % vals
             retries = 3
             while retries:
@@ -113,7 +117,7 @@ def get_data(start_day, end_day=None, chan=None):
                 nick, remark = mtch.groups()
                 if ignore_spam(nick, remark):
                     continue
-                
+
                 doc = {
                     "channel": channel,
                     "posted": tm.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -121,11 +125,8 @@ def get_data(start_day, end_day=None, chan=None):
                     "remark": remark,
                 }
                 doc["id"] = utils.gen_key(doc)
-#                logit("Channel:", channel, "; Nick:", nick, ", Date:", doc["posted"])
-                yield {"_index": "irclog",
-                        "_op_type": "index",
-                        "_id": doc["id"],
-                        "_source": doc}
+                #                logit("Channel:", channel, "; Nick:", nick, ", Date:", doc["posted"])
+                yield {"_index": "irclog", "_op_type": "index", "_id": doc["id"], "_source": doc}
 
 
 def import_irc(start_day, end_day=None, chan=None):
@@ -134,8 +135,9 @@ def import_irc(start_day, end_day=None, chan=None):
     start_time = dt.datetime.now()
     while True:
         try:
-            success, failures = bulk(es_client, get_data(start_day, end_day, chan=last_channel),
-                    max_retries=5)
+            success, failures = bulk(
+                es_client, get_data(start_day, end_day, chan=last_channel), max_retries=5
+            )
             break
         except Exception:
             pass
@@ -146,10 +148,13 @@ def import_irc(start_day, end_day=None, chan=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="IRC Log Parsing")
-    parser.add_argument("--start", "-s", action="append",
-            help="Start date for log parsing.")
-    parser.add_argument("--end", "-e", action="append",
-            help="End date for log parsing. Optional; defaults to today.")
+    parser.add_argument("--start", "-s", action="append", help="Start date for log parsing.")
+    parser.add_argument(
+        "--end",
+        "-e",
+        action="append",
+        help="End date for log parsing. Optional; defaults to today.",
+    )
     parser.add_argument("--chan", "-c", help="Channel to start parsing (alphabetically)")
     args = parser.parse_args()
     if args.start:

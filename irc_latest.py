@@ -1,6 +1,7 @@
 from datetime import datetime
 import sys
 
+import click
 from elasticsearch import Elasticsearch
 import utils
 
@@ -14,7 +15,7 @@ def extract_records(resp):
 def get_latest(num, chan):
     es = Elasticsearch(host=HOST)
     if chan:
-        body = {"query": {"match" : {"channel" : chan}}}
+        body = {"query": {"match": {"channel": chan}}}
         r = es.search(index="irclog", body=body, size=num, sort="posted:desc")
     else:
         r = es.search(index="irclog", size=num, sort="posted:desc")
@@ -23,10 +24,15 @@ def get_latest(num, chan):
     return records
 
 
-if __name__ == "__main__":
-    chan = sys.argv[1] if len(sys.argv) > 1 else ""
-    recs = get_latest(10, chan)
+@click.command()
+@click.option("--channel", "-c", default="", help="Only return records for the specified channel")
+@click.option("--number", "-n", default=10, help="How many records to return. Default=10")
+def main(channel, number):
+    recs = get_latest(number, channel)
     print("NUM", len(recs))
     for rec in recs:
-        print(rec["id"], rec["channel"], rec["posted"], rec["nick"],
-                rec["remark"])
+        print(rec["id"], rec["channel"], rec["posted"], rec["nick"], rec["remark"])
+
+
+if __name__ == "__main__":
+    main()

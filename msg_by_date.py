@@ -1,28 +1,38 @@
+import datetime as dt
 import sys
 
+import click
 from elasticsearch import Elasticsearch
+from utils import extract_records
 
+MAX_RECS = 10000
 HOST = "dodata"
 es = Elasticsearch(host=HOST)
 
 
-def extract_records(resp):
-    return [r["_source"] for r in resp["hits"]["hits"]]
+@click.command()
+# @click.option("--delete", "-d", help="Delete the records on the specified date")
+@click.argument("logdate")
+def main(logdate, delete=False):
+    conv_date = dt.datetime.strptime(logdate, "%Y-%m-%d")
+    conv_next = conv_date + dt.timedelta(days=1)
+    nextdate = conv_next.strftime("%Y-%m-%d")
+    mthd = es.delete_by_query if delete else es.search
 
-delete = False
-log_id = sys.argv[1]
-args = sys.argv[2:]
-if args:
-    if "-d" in args:
-        delete = True
-        args.remove("-d")
-mthd = es.delete_by_query if delete else es.search
+    kwargs = {
+        "body": {"query": {"range": {"posted": {"gte": logdate, "lt": nextdate}}}},
+    }
+    kwargs["size"] = MAX_RECS
+    r = mthd(index="email", **kwargs)
+    if delete:
+        print(f"{r.get('deleted')} records have been deleted.")
+    else:
+        numrecs = len(extract_records(r))
+        if numrecs == MAX_RECS:
+            print(f"There are at least {numrecs} records on {logdate}.")
+        else:
+            print(f"There are {numrecs} records on {logdate}.")
 
-kwargs = {"body": {"query": {"match" : {"imsg" : log_id}}}}
 
-r = mthd("email", **kwargs)
-if delete:
-    print("%s records have been deleted." % r.get("deleted"))
-else:
-    recs = extract_records(r)
-    print(recs)
+if __name__ == "__main__":
+    main()
