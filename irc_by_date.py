@@ -2,11 +2,11 @@ import datetime as dt
 import sys
 
 import click
-from elasticsearch import Elasticsearch
+
+import utils
 
 MAX_RECS = 10000
-HOST = "dodata"
-es = Elasticsearch(host=HOST)
+es = utils.get_elastic_client()
 
 
 def extract_records(resp):

@@ -2,15 +2,15 @@ from datetime import datetime
 import sys
 
 import click
-from elasticsearch import Elasticsearch
 
+import utils
 
 def extract_records(resp):
     return [r["_source"] for r in resp["hits"]["hits"]]
 
 
-HOST = "dodata"
-es = Elasticsearch(host=HOST)
+TIMEOUT = 5
+es = utils.get_elastic_client()
 
 
 @click.command()
@@ -18,9 +18,9 @@ es = Elasticsearch(host=HOST)
 def main(chan):
     if chan:
         body = {"query": {"term": {"channel.keyword": chan}}}
-        r = es.count(index="irclog", body=body)
+        r = es.count(index="irclog", body=body, params={"request_timeout": TIMEOUT})
     else:
-        r = es.count(index="irclog")
+        r = es.count(index="irclog", params={"request_timeout": TIMEOUT})
     total = r["count"]
     if chan:
         print("There are %s documents in the %s channel." % (total, chan))

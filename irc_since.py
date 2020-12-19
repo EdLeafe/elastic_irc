@@ -2,10 +2,10 @@ import datetime as dt
 import sys
 
 import click
-from elasticsearch import Elasticsearch
 
-HOST = "dodata"
-es = Elasticsearch(host=HOST)
+import utils
+
+es = utils.get_elastic_client()
 
 
 def extract_records(resp):

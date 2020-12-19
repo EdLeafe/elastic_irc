@@ -9,5 +9,6 @@ elasticsearch
 idna
 pycparser
 requests
+rich
 six
 urllib3

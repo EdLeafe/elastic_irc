@@ -1,15 +1,14 @@
 import datetime
 import sys
 
-from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 
 import utils
 
 # Get messages in batches of 256
 BATCH_SIZE = 256
-HOST = "dodata"
-es_client = Elasticsearch(host=HOST)
+es_client = utils.get_elastic_client()
+
 
 # My original names suck, so...
 FIELD_MAP = {

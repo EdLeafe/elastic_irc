@@ -3,7 +3,7 @@ curl -X DELETE dodata:9200/email
 curl -X PUT dodata:9200/email -H 'Content-Type: application/json' -d '{"mappings": {
     "properties": {
         "msg_num": {
-            "type": "keyword"},
+            "type": "integer"},
         "list_name": {
             "type": "keyword"},
         "subject": {
@@ -14,7 +14,7 @@ curl -X PUT dodata:9200/email -H 'Content-Type: application/json' -d '{"mappings
         "from": {
             "type": "keyword"},
         "posted": {
-            "type": "keyword"},
+            "type": "date"},
         "message_id": {
             "type": "keyword"},
         "replyto_id": {

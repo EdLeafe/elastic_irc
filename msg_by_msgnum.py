@@ -1,12 +1,11 @@
 import click
-from elasticsearch import Elasticsearch
 
-from utils import extract_records
+import utils
 
 
-ABBREV_MAP = {"p": "profox", "l": "prolinux", "y": "propython", "d": "dabo-dev", "u": "dabo-users"}
+ABBREV_MAP = {"p": "profox", "l": "prolinux", "y": "propython", "d": "dabo-dev", "u": "dabo-users", "c": "codebook"}
 HOST = "dodata"
-es = Elasticsearch(host=HOST)
+es = utils.get_elastic_client()
 
 
 def print_rec(rec):
@@ -36,7 +35,7 @@ def main(msg_num, delete=False):
     if delete:
         print("%s records have been deleted." % r.get("deleted"))
     else:
-        recs = extract_records(r)
+        recs = utils.extract_records(r)
         print_rec(recs[0])
 
 

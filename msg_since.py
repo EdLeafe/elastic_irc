@@ -2,14 +2,12 @@ import datetime as dt
 import sys
 
 import click
-from elasticsearch import Elasticsearch
 
-from utils import extract_records
+import utils
 
 
 MAX_RECS = 10000
-HOST = "dodata"
-es = Elasticsearch(host=HOST)
+es = utils.get_elastic_client()
 
 
 @click.command()
@@ -26,7 +24,7 @@ def main(start, delete):
     if delete:
         print("%s records have been deleted." % r.get("deleted"))
     else:
-        numrecs = len(extract_records(r))
+        numrecs = len(utils.extract_records(r))
         if numrecs == MAX_RECS:
             print("There are at least %s records since %s." % (numrecs, start))
         else:

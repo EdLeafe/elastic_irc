@@ -1,9 +1,8 @@
 from datetime import datetime
-from elasticsearch import Elasticsearch
 
+import utils
 
-HOST = "dodata"
-es = Elasticsearch(host=HOST)
+es = utils.get_elastic_client()
 
 r = es.count(index="email")
 total = r["count"]

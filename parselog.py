@@ -6,14 +6,14 @@ import time
 from urllib.parse import quote
 import warnings
 
-from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 import requests
 import utils
 from utils import logit
 
-HOST = "dodata"
-es_client = Elasticsearch(host=HOST)
+
+es_client = utils.get_elastic_client()
+
 
 with open("CHANNELS") as ff:
     CHANNELS = [chan.strip() for chan in ff.readlines()]

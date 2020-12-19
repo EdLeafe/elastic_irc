@@ -2,18 +2,18 @@ from datetime import datetime
 import sys
 
 import click
-from elasticsearch import Elasticsearch
+from rich.console import Console
+from rich.table import Table
 
-from utils import extract_records
+import utils
 
 
-HOST = "dodata"
 ABBREV_MAP = {"p": "profox", "l": "prolinux", "y": "propython", "d": "dabo-dev", "u": "dabo-users"}
 LIST_MAP = {val: key for key, val in ABBREV_MAP.items()}
 
 
 def get_latest(num, list_name):
-    es = Elasticsearch(host=HOST)
+    es = utils.get_elastic_client()
     if list_name:
         list_abbrev = LIST_MAP.get(list_name, list_name[0])
         body = {"query": {"match": {"list_name": list_abbrev}}}
@@ -21,8 +21,23 @@ def get_latest(num, list_name):
     else:
         r = es.search(index="email", size=num, sort="posted:desc")
 
-    records = extract_records(r)
+    records = utils.extract_records(r)
     return records
+
+
+def print_output(recs):
+    console = Console()
+    table = Table(show_header=True, header_style="bold blue_violet")
+#    table.add_column("ID", style="dim", width=13)
+    table.add_column("MSG #")
+    table.add_column("List")
+    table.add_column("Posted", justify="right")
+    table.add_column("From")
+    table.add_column("Subject")
+    for rec in recs:
+#        table.add_row(rec["id"], str(rec["msg_num"]), ABBREV_MAP.get(rec["list_name"]), rec["posted"], rec["from"], rec["subject"])
+        table.add_row(str(rec["msg_num"]), ABBREV_MAP.get(rec["list_name"]), rec["posted"], rec["from"], rec["subject"])
+    console.print(table)
 
 
 @click.command()
@@ -30,16 +45,7 @@ def get_latest(num, list_name):
 @click.option("--number", "-n", default=10, help="How many records to return. Default=10")
 def main(list_name, number):
     recs = get_latest(number, list_name)
-    print("NUM", len(recs))
-    for rec in recs:
-        print("     ID:", rec["id"])
-        print("MSG_NUM:", rec["msg_num"])
-        print("   LIST:", ABBREV_MAP.get(rec["list_name"]))
-        print("SUBJECT:", rec["subject"])
-        print("   FROM:", rec["from"])
-        print(" POSTED:", rec["posted"])
-        print(" MSG_ID:", rec["message_id"])
-        print("")
+    print_output(recs)
 
 
 if __name__ == "__main__":
