@@ -11,11 +11,6 @@ es = utils.get_elastic_client()
 def extract_records(resp):
     return [r["_source"] for r in resp["hits"]["hits"]]
 
-"""
-[{'channel': '#openstack-manila', 'nick': 'openstackgerrit', 'posted': '2020-12-19T15:31:23', 'remark': 'Maari Tamm
-proposed openstack/python-manilaclient master: [OSC] Implement Share Adopt & Abandon Commands
-https://review.opendev.org/c/openstack/python-manilaclient/+/762754', 'id': '7f5c8438719d081b'}]
-"""
 
 @click.command()
 @click.argument("log_id")
@@ -32,7 +27,6 @@ def main(log_id, delete=False):
         print("%s records have been deleted." % r.get("deleted"))
     else:
         recs = extract_records(r)
-#        print(recs)
         console = Console()
         table = Table()
         table = Table(show_header=False, box=box.HEAVY)

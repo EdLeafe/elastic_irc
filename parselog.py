@@ -48,9 +48,6 @@ def nextdate(day, end_day=None):
         day += ONEDAY
 
 
-#    raise StopIteration
-
-
 def ignore_spam(nick, remark):
     global ignored_nicks
     if any([phrase in remark for phrase in spam_phrases]):
@@ -125,8 +122,12 @@ def get_data(start_day, end_day=None, chan=None):
                     "remark": remark,
                 }
                 doc["id"] = utils.gen_key(doc)
-                #                logit("Channel:", channel, "; Nick:", nick, ", Date:", doc["posted"])
-                yield {"_index": "irclog", "_op_type": "index", "_id": doc["id"], "_source": doc}
+                yield {
+                    "_index": "irclog",
+                    "_op_type": "index",
+                    "_id": doc["id"],
+                    "_source": doc,
+                }
 
 
 def import_irc(start_day, end_day=None, chan=None):
@@ -136,7 +137,9 @@ def import_irc(start_day, end_day=None, chan=None):
     while True:
         try:
             success, failures = bulk(
-                es_client, get_data(start_day, end_day, chan=last_channel), max_retries=5
+                es_client,
+                get_data(start_day, end_day, chan=last_channel),
+                max_retries=5,
             )
             break
         except Exception:

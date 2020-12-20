@@ -8,7 +8,13 @@ from rich.table import Table
 import utils
 
 
-ABBREV_MAP = {"p": "profox", "l": "prolinux", "y": "propython", "d": "dabo-dev", "u": "dabo-users"}
+ABBREV_MAP = {
+    "p": "profox",
+    "l": "prolinux",
+    "y": "propython",
+    "d": "dabo-dev",
+    "u": "dabo-users",
+}
 LIST_MAP = {val: key for key, val in ABBREV_MAP.items()}
 
 
@@ -28,15 +34,20 @@ def get_latest(num, list_name):
 def print_output(recs):
     console = Console()
     table = Table(show_header=True, header_style="bold blue_violet")
-#    table.add_column("ID", style="dim", width=13)
+    #    table.add_column("ID", style="dim", width=13)
     table.add_column("MSG #")
     table.add_column("List")
     table.add_column("Posted", justify="right")
     table.add_column("From")
     table.add_column("Subject")
     for rec in recs:
-#        table.add_row(rec["id"], str(rec["msg_num"]), ABBREV_MAP.get(rec["list_name"]), rec["posted"], rec["from"], rec["subject"])
-        table.add_row(str(rec["msg_num"]), ABBREV_MAP.get(rec["list_name"]), rec["posted"], rec["from"], rec["subject"])
+        table.add_row(
+            str(rec["msg_num"]),
+            ABBREV_MAP.get(rec["list_name"]),
+            rec["posted"],
+            rec["from"],
+            rec["subject"],
+        )
     console.print(table)
 
 

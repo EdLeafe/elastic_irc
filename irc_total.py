@@ -5,6 +5,7 @@ import click
 
 import utils
 
+
 def extract_records(resp):
     return [r["_source"] for r in resp["hits"]["hits"]]
 

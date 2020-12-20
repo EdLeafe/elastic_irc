@@ -1,21 +1,35 @@
 import click
+from rich import box
+from rich.console import Console
+from rich.table import Table
 
 import utils
 
 
-ABBREV_MAP = {"p": "profox", "l": "prolinux", "y": "propython", "d": "dabo-dev", "u": "dabo-users", "c": "codebook"}
-HOST = "dodata"
+ABBREV_MAP = {
+    "p": "ProFox",
+    "l": "ProLinux",
+    "y": "ProPython",
+    "d": "Dabo-dev",
+    "u": "Dabo-users",
+    "c": "Codebook",
+}
 es = utils.get_elastic_client()
 
 
 def print_rec(rec):
-    print(f"Message #: {rec['msg_num']}")
-    print(f"     List: {ABBREV_MAP[rec['list_name']]}")
-    print(f"     From: {rec['from']}")
-    print(f"   Posted: {rec['posted']}")
-    print(f"  Subject: {rec['subject']}")
-    print()
-    print(rec["body"])
+    console = Console()
+    table = Table()
+    table = Table(show_header=False, box=box.HEAVY)
+    table.add_column("", justify="right")
+    table.add_column("")
+    table.add_row("Message #", str(rec["msg_num"]))
+    table.add_row("List", ABBREV_MAP[rec["list_name"]])
+    table.add_row("From", rec["from"])
+    table.add_row("Posted", rec["posted"])
+    table.add_row("Subject", rec["subject"])
+    table.add_row("", rec["body"])
+    console.print(table)
 
 
 @click.command()

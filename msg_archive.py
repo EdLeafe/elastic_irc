@@ -50,7 +50,8 @@ def get_data(currmsg=0, verbose=False):
         if verbose:
             print("CURR", currmsg)
         crs.execute(
-            "SELECT * FROM archive WHERE imsg > %s ORDER BY imsg " "LIMIT %s", (currmsg, BATCH_SIZE)
+            "SELECT * FROM archive WHERE imsg > %s ORDER BY imsg LIMIT %s",
+            (currmsg, BATCH_SIZE),
         )
         recs = crs.fetchall()
         if not recs:
@@ -64,7 +65,12 @@ def get_data(currmsg=0, verbose=False):
             doc = {FIELD_MAP[fld]: val for fld, val in rec.items()}
             doc["fulltext_subject"] = doc["subject"]
             doc["id"] = utils.gen_key(doc)
-            yield {"_index": "email", "_op_type": "index", "_id": doc["id"], "_source": doc}
+            yield {
+                "_index": "email",
+                "_op_type": "index",
+                "_id": doc["id"],
+                "_source": doc,
+            }
 
 
 if __name__ == "__main__":

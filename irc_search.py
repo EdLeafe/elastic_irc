@@ -47,13 +47,13 @@ def main(field, val, num):
         print("Here are the {} most recent:".format(min(num, len(recs))))
         console = Console()
         table = Table(show_header=True, header_style="bold cyan")
-    #    table.add_column("ID", style="dim", width=13)
+        #    table.add_column("ID", style="dim", width=13)
         table.add_column("Posted", justify="right")
         table.add_column("Channel", style="dark_red")
         table.add_column("Nick", justify="right", style="bold yellow")
         table.add_column("Remark")
         for rec in recs:
-    #        table.add_row(rec["id"], rec["posted"], rec["channel"], rec["nick"], rec["remark"])
+            #        table.add_row(rec["id"], rec["posted"], rec["channel"], rec["nick"], rec["remark"])
             table.add_row(rec["posted"], rec["channel"], rec["nick"], rec["remark"])
         console.print(table)
 
