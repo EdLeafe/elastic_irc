@@ -1,6 +1,7 @@
 import datetime
 import sys
 
+import click
 from elasticsearch.helpers import bulk
 
 import utils
@@ -23,10 +24,9 @@ FIELD_MAP = {
 }
 
 
-def _get_start_msg(args):
-    if not args:
+def _get_start_msg(arg):
+    if not arg:
         return 0
-    arg = args[0]
     try:
         return int(arg)
     except ValueError:
@@ -73,8 +73,14 @@ def get_data(currmsg=0, verbose=False):
             }
 
 
-if __name__ == "__main__":
-    currmsg = _get_start_msg(sys.argv[1:])
+@click.command()
+@click.option("--start", "-s", help="Start importing messages after this msgnum or date")
+def main(start):
+    currmsg = _get_start_msg(start)
     success, failures = bulk(es_client, get_data(currmsg=currmsg, verbose=True))
     print("SUCCESS:", success)
     print("FAILED:", failures)
+
+
+if __name__ == "__main__":
+    main()

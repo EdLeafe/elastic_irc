@@ -8,10 +8,6 @@ import utils
 es = utils.get_elastic_client()
 
 
-def extract_records(resp):
-    return [r["_source"] for r in resp["hits"]["hits"]]
-
-
 @click.command()
 @click.option("--chan", "-c", help="Only show records for the specified channel")
 @click.option("--delete", "-d", default=False, help="Delete the found records")

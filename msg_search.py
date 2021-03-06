@@ -1,20 +1,10 @@
 import sys
 
 import click
-from rich.console import Console
-from rich.table import Table
 
 import utils
 
 
-ABBREV_MAP = {
-    "p": "profox",
-    "l": "prolinux",
-    "y": "propython",
-    "d": "dabo-dev",
-    "u": "dabo-users",
-    "c": "codebook",
-}
 es = utils.get_elastic_client()
 
 field_map = {
@@ -30,25 +20,6 @@ field_map = {
 }
 
 
-def print_output(recs):
-    console = Console()
-    table = Table(show_header=True, header_style="bold blue_violet")
-    table.add_column("MSG #", justify="right")
-    table.add_column("List")
-    table.add_column("Posted", justify="right")
-    table.add_column("From")
-    table.add_column("Subject")
-    for rec in recs:
-        table.add_row(
-            str(rec["msg_num"]),
-            ABBREV_MAP.get(rec["list_name"]),
-            rec["posted"],
-            rec["from"],
-            rec["subject"],
-        )
-    console.print(table)
-
-
 @click.command()
 @click.argument("field", type=click.Choice(field_map.keys()), nargs=1)
 @click.argument("value", nargs=1)
@@ -59,15 +30,19 @@ def main(field, value, num):
     else:
         field = "fulltext_subject" if field == "subject" else field
         kwargs = {"body": {"query": {"match_phrase": {field: value}}}}
-    kwargs["size"] = num
     kwargs["body"]["sort"] = {"msg_num": "desc"}
 
-    r = es.search(index="email", **kwargs)
+    r = es.search(index="email", size=num, **kwargs)
     recs = utils.extract_records(r)
-    print("RETURNED:", len(recs))
+    count = len(recs)
+    if count == num:
+        # See how many total matches there are
+        count_recs = es.search(index="email", size=0, **kwargs)
+        count = count_recs["hits"]["total"]["value"]
+    print("Your query", "matched" if count < 10000 else "matched more than", count, "records")
     if recs:
-        print("Here are the {} most recent:".format(min(num, len(recs))))
-        print_output(recs)
+        print(f"Here are the {min(num, len(recs))} most recent:")
+        utils.print_messages(recs)
     else:
         print(f"No matches for '{value}' in field '{field}'")
 

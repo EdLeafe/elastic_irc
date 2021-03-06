@@ -10,10 +10,6 @@ import utils
 HOST = "dodata"
 
 
-def extract_records(resp):
-    return [r["_source"] for r in resp["hits"]["hits"]]
-
-
 def get_latest(num, chan, gerrit):
     es = utils.get_elastic_client()
     if chan or gerrit:
@@ -26,7 +22,8 @@ def get_latest(num, chan, gerrit):
     else:
         r = es.search(index="irclog", size=num, sort="posted:desc")
 
-    records = extract_records(r)
+    records = utils.extract_records(r)
+    utils.massage_date_records(records, "posted")
     return records
 
 
@@ -35,7 +32,7 @@ def print_output(recs):
     table = Table(show_header=True, header_style="bold magenta")
     #    table.add_column("ID", style="dim", width=13)
     table.add_column("Channel")
-    table.add_column("Posted", justify="right")
+    table.add_column("Posted")
     table.add_column("Nick", justify="right", style="bold")
     table.add_column("Remark")
     for rec in recs:

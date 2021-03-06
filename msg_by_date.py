@@ -10,9 +10,12 @@ es = utils.get_elastic_client()
 
 
 @click.command()
-# @click.option("--delete", "-d", help="Delete the records on the specified date")
+@click.option("--delete", "-d", help="Delete the records on the specified date")
 @click.argument("logdate")
-def main(logdate, delete=False):
+@click.option(
+    "--show", "-s", is_flag=True, help="Show the message information instead of just the counts"
+)
+def main(logdate, delete=False, show=False):
     conv_date = dt.datetime.strptime(logdate, "%Y-%m-%d")
     conv_next = conv_date + dt.timedelta(days=1)
     nextdate = conv_next.strftime("%Y-%m-%d")
@@ -26,11 +29,14 @@ def main(logdate, delete=False):
     if delete:
         print(f"{r.get('deleted')} records have been deleted.")
     else:
-        numrecs = len(utils.extract_records(r))
+        recs = utils.extract_records(r)
+        numrecs = len(recs)
         if numrecs == MAX_RECS:
             print(f"There are at least {numrecs} records on {logdate}.")
         else:
             print(f"There are {numrecs} records on {logdate}.")
+        if show:
+            utils.print_messages(recs)
 
 
 if __name__ == "__main__":

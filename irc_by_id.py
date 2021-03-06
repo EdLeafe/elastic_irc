@@ -8,10 +8,6 @@ import utils
 es = utils.get_elastic_client()
 
 
-def extract_records(resp):
-    return [r["_source"] for r in resp["hits"]["hits"]]
-
-
 @click.command()
 @click.argument("log_id")
 @click.option(
@@ -26,7 +22,7 @@ def main(log_id, delete=False):
     if delete:
         print("%s records have been deleted." % r.get("deleted"))
     else:
-        recs = extract_records(r)
+        recs = utils.extract_records(r)
         console = Console()
         table = Table()
         table = Table(show_header=False, box=box.HEAVY)
@@ -34,7 +30,7 @@ def main(log_id, delete=False):
         table.add_column("")
         for rec in recs:
             # Should only be 1 record, but still...
-            table.add_row("Posted", rec["posted"])
+            table.add_row("Posted", utils.massage_date(rec["posted"]))
             table.add_row("Channel", rec["channel"])
             table.add_row("Nick", rec["nick"])
             table.add_row("Remark", rec["remark"])

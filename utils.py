@@ -8,8 +8,11 @@ import os
 from subprocess import Popen, PIPE
 import uuid
 
+from dateutil import parser
 import elasticsearch
 import pymysql
+from rich.console import Console
+from rich.table import Table
 
 
 main_cursor = None
@@ -18,6 +21,14 @@ conn = None
 CURDIR = os.getcwd()
 
 LOG = logging.getLogger(__name__)
+ABBREV_MAP = {
+    "p": "profox",
+    "l": "prolinux",
+    "y": "propython",
+    "d": "dabo-dev",
+    "u": "dabo-users",
+    "c": "codebook",
+}
 
 IntegrityError = pymysql.err.IntegrityError
 
@@ -123,6 +134,17 @@ def human_fmt(num):
         return "1 byte"
 
 
+def format_number(num):
+    """Return a number representation with comma separators."""
+    snum = str(num)
+    parts = []
+    while snum:
+        snum, part = snum[:-3], snum[-3:]
+        parts.append(part)
+    parts.reverse()
+    return ",".join(parts)
+
+
 def get_elastic_client():
     return elasticsearch.Elasticsearch(host=HOST)
 
@@ -163,3 +185,32 @@ def gen_key(orig_rec, digest_size=8):
 
 def extract_records(resp):
     return [r["_source"] for r in resp["hits"]["hits"]]
+
+
+def massage_date(val):
+    dt = parser.parse(val)
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def massage_date_records(records, field_name):
+    for rec in records:
+        rec[field_name] = massage_date(rec[field_name])
+
+
+def print_messages(recs):
+    console = Console()
+    table = Table(show_header=True, header_style="bold blue_violet")
+    table.add_column("MSG #", justify="right")
+    table.add_column("List")
+    table.add_column("Posted", justify="right")
+    table.add_column("From")
+    table.add_column("Subject")
+    for rec in recs:
+        table.add_row(
+            str(rec["msg_num"]),
+            ABBREV_MAP.get(rec["list_name"]),
+            massage_date(rec["posted"]),
+            rec["from"],
+            rec["subject"],
+        )
+    console.print(table)

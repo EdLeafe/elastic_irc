@@ -9,10 +9,6 @@ MAX_RECS = 10000
 es = utils.get_elastic_client()
 
 
-def extract_records(resp):
-    return [r["_source"] for r in resp["hits"]["hits"]]
-
-
 @click.command()
 @click.option("--chan", "-c", help="Only count record for the specified channel")
 @click.option("--delete", "-d", help="Delete the records on the specified date")
@@ -48,7 +44,8 @@ def main(logdate, chan="", delete=False):
     if delete:
         print("%s records have been deleted." % r.get("deleted"))
     else:
-        numrecs = len(extract_records(r))
+        recs = utils.extract_records(r)
+        numrecs = len(recs)
         if numrecs == MAX_RECS:
             print("There are at least %s records on %s." % (numrecs, logdate))
         else:

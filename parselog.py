@@ -57,12 +57,12 @@ def ignore_spam(nick, remark):
     return nick in ignored_nicks
 
 
-def get_data(start_day, end_day=None, chan=None):
+def get_data(start_day, end_day=None, chan=None, exclusive=False):
     global last_channel
     idx = 0
     if chan:
         idx = CHANNELS.index(chan)
-    chans = CHANNELS[idx:]
+    chans = [CHANNELS[idx]] if exclusive else CHANNELS[idx:]
     good2go = False
     for channel in chans:
         good2go = True
@@ -130,7 +130,7 @@ def get_data(start_day, end_day=None, chan=None):
                 }
 
 
-def import_irc(start_day, end_day=None, chan=None):
+def import_irc(start_day, end_day=None, chan=None, exclusive=False):
     global last_channel
     last_channel = chan or last_channel
     start_time = dt.datetime.now()
@@ -138,7 +138,7 @@ def import_irc(start_day, end_day=None, chan=None):
         try:
             success, failures = bulk(
                 es_client,
-                get_data(start_day, end_day, chan=last_channel),
+                get_data(start_day, end_day, chan=last_channel, exclusive=exclusive),
                 max_retries=5,
             )
             break
@@ -159,6 +159,12 @@ if __name__ == "__main__":
         help="End date for log parsing. Optional; defaults to today.",
     )
     parser.add_argument("--chan", "-c", help="Channel to start parsing (alphabetically)")
+    parser.add_argument(
+        "--exclusive",
+        "-x",
+        action="store_true",
+        help="Only parse the specified channel (requires --chan)",
+    )
     args = parser.parse_args()
     if args.start:
         start_day = dt.datetime.strptime(args.start[0], "%Y-%m-%d").date()
@@ -168,4 +174,4 @@ if __name__ == "__main__":
         end_day = dt.datetime.strptime(args.end[0], "%Y-%m-%d").date()
     else:
         end_day = dt.date.today()
-    import_irc(start_day, end_day, chan=args.chan)
+    import_irc(start_day, end_day, chan=args.chan, exclusive=args.exclusive)
