@@ -151,14 +151,18 @@ def import_irc(start_day, end_day=None, chan=None, exclusive=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="IRC Log Parsing")
-    parser.add_argument("--start", "-s", action="append", help="Start date for log parsing.")
+    parser.add_argument(
+        "--start", "-s", action="append", help="Start date for log parsing."
+    )
     parser.add_argument(
         "--end",
         "-e",
         action="append",
         help="End date for log parsing. Optional; defaults to today.",
     )
-    parser.add_argument("--chan", "-c", help="Channel to start parsing (alphabetically)")
+    parser.add_argument(
+        "--chan", "-c", help="Channel to start parsing (alphabetically)"
+    )
     parser.add_argument(
         "--exclusive",
         "-x",
