@@ -74,7 +74,9 @@ def get_data(currmsg=0, verbose=False):
 
 
 @click.command()
-@click.option("--start", "-s", help="Start importing messages after this msgnum or date")
+@click.option(
+    "--start", "-s", help="Start importing messages after this msgnum or date"
+)
 def main(start):
     currmsg = _get_start_msg(start)
     success, failures = bulk(es_client, get_data(currmsg=currmsg, verbose=True))

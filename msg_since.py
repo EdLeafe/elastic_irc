@@ -12,7 +12,9 @@ es = utils.get_elastic_client()
 
 @click.command()
 @click.argument("start")
-@click.option("--delete", "-d", is_flag=True, help="Delete all records since the given date")
+@click.option(
+    "--delete", "-d", is_flag=True, help="Delete all records since the given date"
+)
 def main(start, delete):
     mthd = es.delete_by_query if delete else es.search
     kwargs = {"query": {"range": {"posted": {"gte": start}}}}

@@ -13,7 +13,10 @@ es = utils.get_elastic_client()
 @click.option("--delete", "-d", help="Delete the records on the specified date")
 @click.argument("logdate")
 @click.option(
-    "--show", "-s", is_flag=True, help="Show the message information instead of just the counts"
+    "--show",
+    "-s",
+    is_flag=True,
+    help="Show the message information instead of just the counts",
 )
 def main(logdate, delete=False, show=False):
     conv_date = dt.datetime.strptime(logdate, "%Y-%m-%d")

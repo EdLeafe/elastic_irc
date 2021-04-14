@@ -42,9 +42,15 @@ def print_output(recs):
 
 
 @click.command()
-@click.option("--channel", "-c", default="", help="Only return records for the specified channel")
-@click.option("--number", "-n", default=10, help="How many records to return. Default=10")
-@click.option("--gerrit", "-g", is_flag=True, help="Show messages from openstackgerrit bot")
+@click.option(
+    "--channel", "-c", default="", help="Only return records for the specified channel"
+)
+@click.option(
+    "--number", "-n", default=10, help="How many records to return. Default=10"
+)
+@click.option(
+    "--gerrit", "-g", is_flag=True, help="Show messages from openstackgerrit bot"
+)
 def main(channel, number, gerrit):
     recs = get_latest(number, channel, gerrit)
     print_output(recs)

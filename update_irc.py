@@ -14,7 +14,9 @@ for chan in parselog.CHANNELS:
         if latest:
             latest_rec = latest[0]
             last_post_str = latest_rec["posted"].split("T")[0]
-            last_post_date = datetime.datetime.strptime(last_post_str, "%Y-%m-%d").date()
+            last_post_date = datetime.datetime.strptime(
+                last_post_str, "%Y-%m-%d"
+            ).date()
         else:
             last_post_date = parselog.DEFAULT_START_DATE
         start_date = last_post_date + datetime.timedelta(days=1)

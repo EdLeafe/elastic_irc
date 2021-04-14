@@ -8,10 +8,14 @@ import utils
 
 
 @click.command()
-@click.argument("field")
-@click.argument("val")
+@click.argument("field", nargs=-1)
+@click.argument("val", nargs=1)
 @click.option("--num", "-n", default=10, help="Maximum number of records to return")
-def main(field, val, num):
+@click.option("--chan", "-c", help="Only search records for the specified channel")
+def main(field, val, num, chan):
+    field = field or "remark"
+    if isinstance(field, (tuple, list)):
+        field = field[0]
     es = utils.get_elastic_client()
 
     field_map = {
@@ -24,17 +28,35 @@ def main(field, val, num):
 
     if field not in field_map:
         print(
-            "Unknown field '%s'. Valid field names are: %s" % (field, str(list(field_map.keys())))
+            "Unknown field '%s'. Valid field names are: %s"
+            % (field, str(list(field_map.keys())))
         )
         sys.exit()
 
     if field_map[field] == "keyword":
-        kwargs = {"body": {"query": {"match": {field: val}}}}
+        expr = {"match": {field: val}}
     else:
-        kwargs = {"body": {"query": {"match_phrase": {field: val}}}}
+        expr = {"match_phrase": {field: val}}
+    if chan:
+        chan_expr = {"term": {"channel.keyword": chan}}
+        kwargs = {
+            "body": {
+                "query": {
+                    "bool": {
+                        "must": expr,
+                        "filter": chan_expr,
+                    }
+                }
+            }
+        }
+    else:
+        kwargs = {"body": {"query": expr}}
     kwargs["size"] = num
     kwargs["sort"] = ["posted:desc"]
 
+    import pprint
+
+    pprint.pprint(kwargs)
     r = es.search(index="irclog", **kwargs)
     total = r["hits"]["total"]["value"]
     relation = r["hits"]["total"]["relation"]
@@ -48,6 +70,7 @@ def main(field, val, num):
         console = Console()
         table = Table(show_header=True, header_style="bold cyan")
         #    table.add_column("ID", style="dim", width=13)
+        table.add_column("ID", justify="right")
         table.add_column("Posted", justify="right")
         table.add_column("Channel", style="red")
         table.add_column("Nick", justify="right", style="bold yellow")
@@ -55,7 +78,11 @@ def main(field, val, num):
         for rec in recs:
             #        table.add_row(rec["id"], rec["posted"], rec["channel"], rec["nick"], rec["remark"])
             table.add_row(
-                utils.massage_date(rec["posted"]), rec["channel"], rec["nick"], rec["remark"]
+                rec["id"],
+                utils.massage_date(rec["posted"]),
+                rec["channel"],
+                rec["nick"],
+                rec["remark"],
             )
         console.print(table)
 

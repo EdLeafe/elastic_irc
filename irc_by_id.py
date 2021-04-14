@@ -11,7 +11,11 @@ es = utils.get_elastic_client()
 @click.command()
 @click.argument("log_id")
 @click.option(
-    "--delete", "-d", "delete", default=False, help="Delete the record with the supplied ID"
+    "--delete",
+    "-d",
+    "delete",
+    default=False,
+    help="Delete the record with the supplied ID",
 )
 def main(log_id, delete=False):
     mthd = es.delete_by_query if delete else es.search
