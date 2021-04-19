@@ -38,7 +38,7 @@ def main(field, val, num, chan):
     else:
         expr = {"match_phrase": {field: val}}
     if chan:
-        chan_expr = {"term": {"channel.keyword": chan}}
+        chan_expr = {"term": {"channel": chan}}
         kwargs = {
             "body": {
                 "query": {

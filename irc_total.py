@@ -13,7 +13,7 @@ es = utils.get_elastic_client()
 @click.option("--chan", "-c", help="Only count records for the specified channel")
 def main(chan):
     if chan:
-        body = {"query": {"term": {"channel.keyword": chan}}}
+        body = {"query": {"term": {"channel": chan}}}
         r = es.count(index="irclog", body=body, params={"request_timeout": TIMEOUT})
     else:
         r = es.count(index="irclog", params={"request_timeout": TIMEOUT})
