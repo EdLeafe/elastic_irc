@@ -63,12 +63,8 @@ def print_output(recs):
 
 
 @click.command()
-@click.option(
-    "--list_name", "-l", default="", help="Only return records for the specified list"
-)
-@click.option(
-    "--number", "-n", default=10, help="How many records to return. Default=10"
-)
+@click.option("--list_name", "-l", default="", help="Only return records for the specified list")
+@click.option("--number", "-n", default=10, help="How many records to return. Default=10")
 def main(list_name, number):
     recs = get_latest(number, list_name)
     print_output(recs)

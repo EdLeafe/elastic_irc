@@ -26,9 +26,7 @@ def print_output(recs):
 @click.command()
 @click.option("--chan", "-c", help="Only show records for the specified channel")
 @click.option("--delete", "-d", default=False, help="Delete the found records")
-@click.option(
-    "--show", "-s", is_flag=True, help="Show the records and not just the total"
-)
+@click.option("--show", "-s", is_flag=True, help="Show the records and not just the total")
 @click.argument("start")
 def main(start, chan, delete, show):
     delete = False

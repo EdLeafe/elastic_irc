@@ -11,7 +11,9 @@ es = utils.get_elastic_client()
 def main():
     r = es.count(index="email")
     total = r["count"]
-    print(f"There are {utils.format_number(total)} documents in the index.")
+    print(
+        f"There are {utils.format_number(total)} documents in the index at {datetime.now().strftime('%H:%M:%S')}."
+    )
 
 
 if __name__ == "__main__":

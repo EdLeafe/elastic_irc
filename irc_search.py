@@ -28,8 +28,7 @@ def main(field, val, num, chan):
 
     if field not in field_map:
         print(
-            "Unknown field '%s'. Valid field names are: %s"
-            % (field, str(list(field_map.keys())))
+            "Unknown field '%s'. Valid field names are: %s" % (field, str(list(field_map.keys())))
         )
         sys.exit()
 
@@ -57,6 +56,9 @@ def main(field, val, num, chan):
     import pprint
 
     pprint.pprint(kwargs)
+    import pudb
+
+    pudb.set_trace()
     r = es.search(index="irclog", **kwargs)
     total = r["hits"]["total"]["value"]
     relation = r["hits"]["total"]["relation"]

@@ -34,9 +34,7 @@ IntegrityError = pymysql.err.IntegrityError
 
 
 def runproc(cmd):
-    proc = Popen(
-        [cmd], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True
-    )
+    proc = Popen([cmd], shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
     stdout_text, stderr_text = proc.communicate()
     return stdout_text, stderr_text
 
@@ -109,8 +107,7 @@ def nocache(view):
         response = make_response(view(*args, **kwargs))
         response.headers["Last-Modified"] = datetime.now()
         response.headers["Cache-Control"] = (
-            "no-store, no-cache, "
-            "must-revalidate, post-check=0, pre-check=0, max-age=0"
+            "no-store, no-cache, " "must-revalidate, post-check=0, pre-check=0, max-age=0"
         )
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "-1"

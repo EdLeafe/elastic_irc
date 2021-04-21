@@ -20,13 +20,9 @@ def main(chan):
     total = r["count"]
     now = datetime.now().strftime("%H:%M:%S")
     if chan:
-        print(
-            f"There are {utils.format_number(total)} documents in the {chan} channel at {now}."
-        )
+        print(f"There are {utils.format_number(total)} documents in the {chan} channel at {now}.")
     else:
-        print(
-            f"There are {utils.format_number(total)} documents in the index at {now}."
-        )
+        print(f"There are {utils.format_number(total)} documents in the index at {now}.")
 
 
 if __name__ == "__main__":

@@ -72,9 +72,7 @@ async def get_data(name, start_day, end_day, queue):
         esc_chan = quote(channel)
         async for day in nextdate(start_day, end_day):
             if day.day == 1:
-                print(
-                    f"{name}: Starting {day.year}-{day.month}-{day.day} for {channel}"
-                )
+                print(f"{name}: Starting {day.year}-{day.month}-{day.day} for {channel}")
             vals = {
                 "esc_chan": esc_chan,
                 "year": day.year,
@@ -124,9 +122,7 @@ async def get_data(name, start_day, end_day, queue):
                 }
                 doc["id"] = utils.gen_key(doc)
 
-                updates.append(
-                    json.dumps({"index": {"_id": doc["id"], "_index": "irclog"}})
-                )
+                updates.append(json.dumps({"index": {"_id": doc["id"], "_index": "irclog"}}))
                 updates.append(json.dumps(doc))
                 if len(updates) >= 1000:
                     await post_updates(name, updates, session)
