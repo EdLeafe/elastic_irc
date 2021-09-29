@@ -7,8 +7,6 @@ from rich.table import Table
 
 import utils
 
-HOST = "dodata"
-
 
 def get_latest(num, chan, gerrit):
     es = utils.get_elastic_client()
@@ -17,7 +15,14 @@ def get_latest(num, chan, gerrit):
         if chan:
             body["query"]["bool"]["must"] = {"match": {"channel": chan}}
         if gerrit:
-            body["query"]["bool"]["must_not"] = {"match": {"nick": "openstackgerrit"}}
+            body["query"]["bool"]["must_not"] = {
+                "bool": {
+                    "should": [
+                        {"match": {"nick": "openstackgerrit"}},
+                        {"match": {"nick": "opendevreview"}},
+                    ]
+                }
+            }
         r = es.search(index="irclog", body=body, size=num, sort="posted:desc")
     else:
         r = es.search(index="irclog", size=num, sort="posted:desc")

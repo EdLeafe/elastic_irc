@@ -5,6 +5,7 @@ import click
 import utils
 
 
+LOGFILE = "irc_counts.txt"
 TIMEOUT = 5
 es = utils.get_elastic_client()
 
@@ -23,6 +24,11 @@ def main(chan):
         print(f"There are {utils.format_number(total)} documents in the {chan} channel at {now}.")
     else:
         print(f"There are {utils.format_number(total)} documents in the index at {now}.")
+
+
+#        with open(LOGFILE, "a") as ff:
+#            tstamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#            ff.write(f"{tstamp}\t{total}\n")
 
 
 if __name__ == "__main__":

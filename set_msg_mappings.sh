@@ -1,6 +1,6 @@
-curl -X DELETE dodata:9200/email
+curl -X DELETE datahost:9200/email
 
-curl -X PUT dodata:9200/email -H 'Content-Type: application/json' -d '{"mappings": {
+curl -X PUT datahost:9200/email -H 'Content-Type: application/json' -d '{"mappings": {
     "properties": {
         "msg_num": {
             "type": "integer"},

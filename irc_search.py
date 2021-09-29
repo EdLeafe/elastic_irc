@@ -7,12 +7,25 @@ from rich.table import Table
 import utils
 
 
+def write_to_file(recs, output_file):
+    data = ["\t".join([str(item) for item in rec.values()]) for rec in recs]
+    with open(output_file, "w") as ff:
+        ff.write("\n".join(data))
+
+
 @click.command()
 @click.argument("field", nargs=-1)
 @click.argument("val", nargs=1)
 @click.option("--num", "-n", default=10, help="Maximum number of records to return")
 @click.option("--chan", "-c", help="Only search records for the specified channel")
-def main(field, val, num, chan):
+@click.option(
+    "--column",
+    "-m",
+    multiple=True,
+    help="Only include this column. Use multiple times for more than one column.",
+)
+@click.option("--output", "-o", "output_file")
+def main(field, val, num, chan, column, output_file):
     field = field or "remark"
     if isinstance(field, (tuple, list)):
         field = field[0]
@@ -52,40 +65,48 @@ def main(field, val, num, chan):
         kwargs = {"body": {"query": expr}}
     kwargs["size"] = num
     kwargs["sort"] = ["posted:desc"]
+    if column:
+        kwargs["_source"] = column
 
-    import pprint
-
-    pprint.pprint(kwargs)
-    import pudb
-
-    pudb.set_trace()
     r = es.search(index="irclog", **kwargs)
     total = r["hits"]["total"]["value"]
     relation = r["hits"]["total"]["relation"]
     recs = utils.extract_records(r)
+    if output_file:
+        write_to_file(recs, output_file)
+        return
     if relation == "eq":
         print("\nThere were {} records found".format(total))
     elif relation == "gte":
-        print("\nThere were more than {} records found".format(total))
+        kwargs["size"] = 0
+        tot = es.search(index="irclog", track_total_hits=True, **kwargs)
+        actual_hits = tot["hits"]["total"]["value"]
+        print(f"\nThere were exactly {actual_hits} records found")
     if recs:
         print("Here are the {} most recent:".format(min(num, len(recs))))
         console = Console()
         table = Table(show_header=True, header_style="bold cyan")
-        #    table.add_column("ID", style="dim", width=13)
-        table.add_column("ID", justify="right")
-        table.add_column("Posted", justify="right")
-        table.add_column("Channel", style="red")
-        table.add_column("Nick", justify="right", style="bold yellow")
-        table.add_column("Remark")
+        # See if there are columns specified
+        allow_cols = column if column else ("id", "posted", "channel", "nick", "remark")
+        title_dict = {
+            "id": "ID",
+            "posted": "Posted",
+            "channel": "Channel",
+            "nick": "Nick",
+            "remark": "Remark",
+        }
+        for col in allow_cols:
+            justify = "left" if col == "channel" else "right"
+            style = "red" if col == "channel" else "bold yellow" if col == "nick" else None
+            table.add_column(title_dict.get(col), justify=justify, style=style)
         for rec in recs:
-            #        table.add_row(rec["id"], rec["posted"], rec["channel"], rec["nick"], rec["remark"])
-            table.add_row(
-                rec["id"],
-                utils.massage_date(rec["posted"]),
-                rec["channel"],
-                rec["nick"],
-                rec["remark"],
-            )
+            row = []
+            for col in allow_cols:
+                if col == "posted":
+                    row.append(utils.massage_date(rec["posted"]))
+                else:
+                    row.append(rec[col])
+            table.add_row(*row)
         console.print(table)
 
 

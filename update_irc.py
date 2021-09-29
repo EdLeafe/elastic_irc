@@ -1,6 +1,6 @@
 import datetime
 import irc_latest
-import parselog
+import parse_irc_log as parselog
 import sys
 
 use_latest = True

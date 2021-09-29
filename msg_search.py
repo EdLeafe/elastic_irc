@@ -50,7 +50,7 @@ def main(field, value, num):
     )
     if recs:
         print(f"Here are the {min(num, len(recs))} most recent:")
-        utils.print_messages(recs)
+        utils.print_message_list(recs)
     else:
         print(f"No matches for '{value}' in field '{field}'")
 

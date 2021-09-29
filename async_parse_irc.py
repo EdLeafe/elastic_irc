@@ -1,5 +1,4 @@
 import aiohttp
-import argparse
 import asyncio
 import datetime as dt
 import json
@@ -7,20 +6,17 @@ import os
 import re
 import time
 from urllib.parse import quote
-import warnings
 
 import click
-from elasticsearch.helpers import bulk
 
 import utils
-from utils import logit
 
 
 es_client = utils.get_elastic_client()
 
 with open("CHANNELS") as ff:
     CHANNELS = [chan.strip() for chan in ff.readlines()]
-DEFAULT_START_DATE = dt.date(2017, 1, 1)
+DEFAULT_START_DATE = dt.date(2020, 1, 1)
 NUM_CONCURRENT = 10
 
 URI_PAT = "http://eavesdrop.openstack.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
@@ -47,7 +43,7 @@ def parse_line(ln):
 
 
 async def nextdate(day, end_day=None):
-    end_day = end_day or dt.date.today()
+    end_day = end_day or dt.datetime.now()
     while day < end_day:
         yield day
         day += ONEDAY
@@ -64,73 +60,73 @@ def ignore_spam(nick, remark):
 
 
 async def get_data(name, start_day, end_day, queue):
-    session = aiohttp.ClientSession()
-    updates = []
-    while True:
-        channel = await queue.get()
-        print(f"{name}: working on **{channel}**")
-        esc_chan = quote(channel)
-        async for day in nextdate(start_day, end_day):
-            if day.day == 1:
-                print(f"{name}: Starting {day.year}-{day.month}-{day.day} for {channel}")
-            vals = {
-                "esc_chan": esc_chan,
-                "year": day.year,
-                "month": str(day.month).zfill(2),
-                "day": str(day.day).zfill(2),
-            }
-            uri = URI_PAT % vals
-            retries = 3
-            while retries:
-                try:
-                    async with session.get(uri) as resp:
-                        status_code = resp.status
-                        try:
-                            resp_text = await resp.text()
-                        except UnicodeDecodeError:
-                            resp_text = ""
-                    break
-                except aiohttp.ClientConnectionError as e:
-                    print(f"Failed '{e}'; retrying...")
-                    await asyncio.sleep((5 - retries) ** 2)
-                    retries -= 1
-            if retries == 0 or status_code > 299:
-                # Error; skip it
-                continue
-            text = resp_text.translate(CTRL_CHAR_MAP)
-            for ln in text.splitlines():
-                if not ln:
-                    continue
-                try:
-                    tm, tx = parse_line(ln)
-                except ValueError as e:
-                    print(f"Error encountered: {e}")
-                    continue
-                mtch = NICK_PAT.match(tx)
-                if not mtch:
-                    # JOINS, QUITS, etc.
-                    continue
-                nick, remark = mtch.groups()
-                if ignore_spam(nick, remark):
-                    continue
-
-                doc = {
-                    "channel": channel,
-                    "posted": tm.strftime("%Y-%m-%dT%H:%M:%S"),
-                    "nick": nick,
-                    "remark": remark,
+    async with aiohttp.ClientSession() as session:
+        updates = []
+        while True:
+            channel = await queue.get()
+            print(f"{name}: working on **{channel}**")
+            esc_chan = quote(channel)
+            async for day in nextdate(start_day, end_day):
+                if day.day == 1:
+                    print(f"{name}: Starting {day.year}-{day.month}-{day.day} for {channel}")
+                vals = {
+                    "esc_chan": esc_chan,
+                    "year": day.year,
+                    "month": str(day.month).zfill(2),
+                    "day": str(day.day).zfill(2),
                 }
-                doc["id"] = utils.gen_key(doc)
+                uri = URI_PAT % vals
+                retries = 3
+                while retries:
+                    try:
+                        async with session.get(uri) as resp:
+                            status_code = resp.status
+                            try:
+                                resp_text = await resp.text()
+                            except UnicodeDecodeError:
+                                resp_text = ""
+                        break
+                    except aiohttp.ClientConnectionError as e:
+                        print(f"Failed '{e}'; retrying...")
+                        await asyncio.sleep((5 - retries) ** 2)
+                        retries -= 1
+                if retries == 0 or status_code > 299:
+                    # Error; skip it
+                    continue
+                text = resp_text.translate(CTRL_CHAR_MAP)
+                for ln in text.splitlines():
+                    if not ln:
+                        continue
+                    try:
+                        tm, tx = parse_line(ln)
+                    except ValueError as e:
+                        print(f"Error encountered: {e}")
+                        continue
+                    mtch = NICK_PAT.match(tx)
+                    if not mtch:
+                        # JOINS, QUITS, etc.
+                        continue
+                    nick, remark = mtch.groups()
+                    if ignore_spam(nick, remark):
+                        continue
 
-                updates.append(json.dumps({"index": {"_id": doc["id"], "_index": "irclog"}}))
-                updates.append(json.dumps(doc))
-                if len(updates) >= 1000:
-                    await post_updates(name, updates, session)
-                    updates = []
-                await asyncio.sleep(0.01)
-        await post_updates(name, updates, session)
-        print(f"{name}: calling task_done")
-        queue.task_done()
+                    doc = {
+                        "channel": channel,
+                        "posted": tm.strftime("%Y-%m-%dT%H:%M:%S"),
+                        "nick": nick,
+                        "remark": remark,
+                    }
+                    doc["id"] = utils.gen_key(doc)
+
+                    updates.append(json.dumps({"index": {"_id": doc["id"], "_index": "irclog"}}))
+                    updates.append(json.dumps(doc))
+                    if len(updates) >= 1000:
+                        await post_updates(name, updates, session)
+                        updates = []
+                    await asyncio.sleep(0.01)
+            await post_updates(name, updates, session)
+            print(f"{name}: calling task_done")
+            queue.task_done()
     await session.close()
 
 
@@ -147,13 +143,9 @@ async def post_updates(name, updates, session):
             print(f"BAD POST: {resp.status} -- {cnt}")
 
 
-# @click.command()
-# @click.option("--start", "-s", help="Start day for parsing. Default=2017-01-01")
-# @click.option("--end", "-e", help="End day for parsing. Default=today")
-# @click.option("--chan", "-c", help="Only parse records for the specified channel")
-async def main(start=None, end=None, chan=None):
+async def main_runner(start=None, end=None, chan=None):
     start_day = dt.datetime.strptime(start, "%Y-%m-%d") if start else DEFAULT_START_DATE
-    end_day = dt.datetime.strptime(end, "%Y-%m-%d") if end else dt.date.today()
+    end_day = dt.datetime.strptime(end, "%Y-%m-%d") if end else dt.datetime.now()
     channels = [chan] if chan else CHANNELS
 
     queue = asyncio.Queue()
@@ -185,4 +177,13 @@ async def main(start=None, end=None, chan=None):
     print(f">> ELAPSED: {elapsed}")
 
 
-asyncio.run(main())
+@click.command()
+@click.option("--start", "-s", help="Start day for parsing. Default=2017-01-01")
+@click.option("--end", "-e", help="End day for parsing. Default=today")
+@click.option("--chan", "-c", help="Only parse records for the specified channel")
+def main(start=None, end=None, chan=None):
+    asyncio.run(main_runner(start=start, end=end, chan=chan))
+
+
+if __name__ == "__main__":
+    main()
