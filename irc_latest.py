@@ -8,7 +8,7 @@ from rich.table import Table
 import utils
 
 
-def get_latest(num, chan, gerrit):
+def get_latest(num, chan, gerrit=True):
     es = utils.get_elastic_client()
     if chan or gerrit:
         body = {"query": {"bool": {}}}
