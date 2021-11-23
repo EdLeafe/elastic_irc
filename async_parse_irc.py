@@ -13,6 +13,13 @@ import utils
 
 
 es_client = utils.get_elastic_client()
+print_output = True
+
+
+def output(*msgs):
+    if print_output:
+        print(" ".join(msgs))
+
 
 with open("CHANNELS") as ff:
     CHANNELS = [chan.strip() for chan in ff.readlines()]
@@ -54,7 +61,7 @@ def ignore_spam(nick, remark):
     global ignored_nicks
     if any([phrase in remark for phrase in spam_phrases]):
         if nick not in ignored_nicks:
-            print(f"ADDING {nick} TO IGNORED NICKS")
+            output(f"ADDING {nick} TO IGNORED NICKS")
             ignored_nicks.add(nick)
     return nick in ignored_nicks
 
@@ -64,11 +71,11 @@ async def get_data(name, start_day, end_day, queue):
         updates = []
         while True:
             channel = await queue.get()
-            print(f"{name}: working on **{channel}**")
+            output(f"{name}: working on **{channel}**")
             esc_chan = quote(channel)
             async for day in nextdate(start_day, end_day):
                 if day.day == 1:
-                    print(f"{name}: Starting {day.year}-{day.month}-{day.day} for {channel}")
+                    output(f"{name}: Starting {day.year}-{day.month}-{day.day} for {channel}")
                 vals = {
                     "esc_chan": esc_chan,
                     "year": day.year,
@@ -87,7 +94,7 @@ async def get_data(name, start_day, end_day, queue):
                                 resp_text = ""
                         break
                     except aiohttp.ClientConnectionError as e:
-                        print(f"Failed '{e}'; retrying...")
+                        output(f"Failed '{e}'; retrying...")
                         await asyncio.sleep((5 - retries) ** 2)
                         retries -= 1
                 if retries == 0 or status_code > 299:
@@ -100,7 +107,7 @@ async def get_data(name, start_day, end_day, queue):
                     try:
                         tm, tx = parse_line(ln)
                     except ValueError as e:
-                        print(f"Error encountered: {e}")
+                        output(f"Error encountered: {e}")
                         continue
                     mtch = NICK_PAT.match(tx)
                     if not mtch:
@@ -125,7 +132,7 @@ async def get_data(name, start_day, end_day, queue):
                         updates = []
                     await asyncio.sleep(0.01)
             await post_updates(name, updates, session)
-            print(f"{name}: calling task_done")
+            output(f"{name}: calling task_done")
             queue.task_done()
     await session.close()
 
@@ -140,13 +147,16 @@ async def post_updates(name, updates, session):
     ) as resp:
         if resp.status != 200:
             cnt = await resp.content.read()
-            print(f"BAD POST: {resp.status} -- {cnt}")
+            output(f"BAD POST: {resp.status} -- {cnt}")
 
 
-async def main_runner(start=None, end=None, chan=None):
+async def main_runner(start=None, end=None, chan=None, quiet=False):
     start_day = dt.datetime.strptime(start, "%Y-%m-%d") if start else DEFAULT_START_DATE
     end_day = dt.datetime.strptime(end, "%Y-%m-%d") if end else dt.datetime.now()
     channels = [chan] if chan else CHANNELS
+
+    global print_output
+    print_output = not quiet
 
     queue = asyncio.Queue()
     for channel in channels:
@@ -156,33 +166,38 @@ async def main_runner(start=None, end=None, chan=None):
     tasks = []
     for i in range(NUM_CONCURRENT):
         name = f"Task-{i}"
-        print(f">> Creating {name}")
+        output(f">> Creating {name}")
         task = asyncio.create_task(get_data(name, start_day, end_day, queue))
-        print(f">> Created {task}")
+        output(f">> Created {task}")
         tasks.append(task)
 
     time_started = time.monotonic()
-    print(">> Starting await queue.join()")
+    output(">> Starting await queue.join()")
     await queue.join()
-    print(">> Finished await queue.join()")
+    output(">> Finished await queue.join()")
     elapsed = time.monotonic() - time_started
 
     for task in tasks:
-        print(f">> Canceling {task}")
+        output(f">> Canceling {task}")
         task.cancel()
-    print(">> Starting gather()")
+    output(">> Starting gather()")
     await asyncio.gather(*tasks, return_exceptions=True)
-    print(">> Finished gather()")
+    output(">> Finished gather()")
 
-    print(f">> ELAPSED: {elapsed}")
+    output(f">> ELAPSED: {elapsed}")
+
+
+def parse(start=None, end=None, chan=None, quiet=False):
+    asyncio.run(main_runner(start=start, end=end, chan=chan, quiet=quiet))
 
 
 @click.command()
 @click.option("--start", "-s", help="Start day for parsing. Default=2017-01-01")
 @click.option("--end", "-e", help="End day for parsing. Default=today")
 @click.option("--chan", "-c", help="Only parse records for the specified channel")
-def main(start=None, end=None, chan=None):
-    asyncio.run(main_runner(start=start, end=end, chan=chan))
+@click.option("--quiet", "-q", help="Suppress all print output")
+def main(start=None, end=None, chan=None, quiet=False):
+    return parse(start=start, end=end, chan=chan, quiet=quiet)
 
 
 if __name__ == "__main__":
