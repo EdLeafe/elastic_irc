@@ -20,6 +20,7 @@ def get_latest(num, chan, gerrit=True):
                     "should": [
                         {"match": {"nick": "openstackgerrit"}},
                         {"match": {"nick": "opendevreview"}},
+                        {"match": {"nick": "rdogerrit"}},
                     ]
                 }
             }

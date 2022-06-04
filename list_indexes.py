@@ -1,7 +1,7 @@
 import requests
 
 HQ = ".elastichq"
-url = "http://datahost:9200/_cat/indices"
+url = "http://dodata:9200/_cat/indices"
 response = requests.request("GET", url)
 
 indexes = [ln.split()[2] for ln in response.text.splitlines()]

@@ -7,6 +7,7 @@ from math import log
 import os
 from subprocess import Popen, PIPE
 import uuid
+import warnings
 
 from dateutil import parser
 import elasticsearch
@@ -15,6 +16,8 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
+
+warnings.simplefilter("ignore", elasticsearch.ElasticsearchWarning)
 
 main_cursor = None
 HOST = "dodata"

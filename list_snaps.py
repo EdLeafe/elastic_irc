@@ -1,10 +1,7 @@
 import requests
-import pudb
-
-pudb.set_trace()
 
 HQ = ".elastichq"
-url = "http://datahost:9200/_snapshot/elasticback/_all"
+url = "http://dodata:9200/_snapshot/elasticback/_all"
 response = requests.request("GET", url)
 snaps = response.json()["snapshots"]
 print(f"Total Snapshots: {len(snaps)}")
