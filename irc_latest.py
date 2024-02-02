@@ -20,6 +20,7 @@ def get_latest(num, chan, gerrit=True):
                     "should": [
                         {"match": {"nick": "openstackgerrit"}},
                         {"match": {"nick": "opendevreview"}},
+                        {"match": {"nick": "rdogerrit"}},
                     ]
                 }
             }
@@ -46,7 +47,7 @@ def print_output(recs):
     console.print(table)
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("--channel", "-c", default="", help="Only return records for the specified channel")
 @click.option("--number", "-n", default=10, help="How many records to return. Default=10")
 @click.option("--gerrit", "-g", is_flag=True, help="Show messages from openstackgerrit bot")

@@ -26,7 +26,8 @@ with open("CHANNELS") as ff:
 DEFAULT_START_DATE = dt.date(2020, 1, 1)
 NUM_CONCURRENT = 10
 
-URI_PAT = "http://eavesdrop.openstack.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
+# URI_PAT = "http://eavesdrop.openstack.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
+URI_PAT = "https://meetings.opendev.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
 NICK_PAT = re.compile(r"<([^>]+)> (.*)")
 ONEDAY = dt.timedelta(days=1)
 ctl_chars = dict.fromkeys(range(32))
@@ -139,6 +140,7 @@ async def get_data(name, start_day, end_day, queue):
 
 async def post_updates(name, updates, session):
     data = "\n".join(updates) + "\n"
+    output("POSTING UPDATE", data)
     async with session.post(
         "http://dodata:9200/irclog/_bulk",
         headers={"Content-Type": "application/x-ndjson"},
@@ -191,7 +193,7 @@ def parse(start=None, end=None, chan=None, quiet=False):
     asyncio.run(main_runner(start=start, end=end, chan=chan, quiet=quiet))
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("--start", "-s", help="Start day for parsing. Default=2017-01-01")
 @click.option("--end", "-e", help="End day for parsing. Default=today")
 @click.option("--chan", "-c", help="Only parse records for the specified channel")

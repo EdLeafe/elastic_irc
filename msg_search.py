@@ -20,7 +20,7 @@ field_map = {
 }
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.argument("field", type=click.Choice(field_map.keys()), nargs=-1)
 @click.argument("value", nargs=1)
 @click.option("--num", "-n", default=10, help="Maximum number of records to return")
@@ -29,12 +29,27 @@ def main(field, value, num):
     if isinstance(field, (tuple, list)):
         field = field[0]
     if field_map[field] == "keyword":
-        kwargs = {"body": {"query": {"match": {field: value}}}}
+        kwargs = {
+            "body": {
+                "query": {
+                    "regexp": {
+                        field: {
+                            "value": f".*{value}.*",
+                            "flags": "ALL",
+                            "case_insensitive": True,
+                            "rewrite": "constant_score",
+                        }
+                    }
+                }
+            }
+        }
+    #         kwargs = {"body": {"query": {"match": {field: value}}}}
     else:
         field = "fulltext_subject" if field == "subject" else field
         kwargs = {"body": {"query": {"match_phrase": {field: value}}}}
     kwargs["body"]["sort"] = {"msg_num": "desc"}
 
+    print(kwargs["body"])
     r = es.search(index="email", size=num, **kwargs)
     recs = utils.extract_records(r)
     count = len(recs)

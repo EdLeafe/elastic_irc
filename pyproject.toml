@@ -19,9 +19,26 @@ exclude = '''
 )
 '''
 
+[tool.poetry]
+name = "elastic_irc"
+version = "0.1.0"
+description = ""
+authors = ["EdLeafe <ed@leafe.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+elasticsearch = "7.12.0"
+python-dateutil = "^2.8.2"
+PyMySQL = "^1.0.2"
+rich = "^11.0.0"
+click = "^8.0.3"
+requests = "^2.27.1"
+ipython = "7.31.1"
+aiohttp = "3.7.4"
+pytest-pudb = "^0.7.0"
+
+[tool.poetry.dev-dependencies]
+
 [build-system]
-requires = [
-    "setuptools >= 35.0.2",
-    "setuptools_scm >= 2.0.0, <3"
-]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

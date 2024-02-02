@@ -10,7 +10,7 @@ MAX_RECS = 10000
 es = utils.get_elastic_client()
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.argument("start")
 @click.option("--delete", "-d", is_flag=True, help="Delete all records since the given date")
 def main(start, delete):

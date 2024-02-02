@@ -31,7 +31,7 @@ def get_latest(num, list_name):
     return records
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("--list_name", "-l", default="", help="Only return records for the specified list")
 @click.option("--number", "-n", default=10, help="How many records to return. Default=10")
 def main(list_name, number):

@@ -23,7 +23,7 @@ def print_output(recs):
     console.print(table)
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("--chan", "-c", help="Only show records for the specified channel")
 @click.option("--delete", "-d", default=False, help="Delete the found records")
 @click.option("--show", "-s", is_flag=True, help="Show the records and not just the total")
