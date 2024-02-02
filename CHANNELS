@@ -17,9 +17,11 @@
 #oooq
 #opendev
 #opendev-meeting
+#opendev-sandbox
 #openinfra
 #openinfra-board
 #openinfra-diversity
+#openinfra-envirosig
 #openinfra-events
 #openinfralabs
 #openinfralabs-monitoring
@@ -81,6 +83,7 @@
 #openstack-kolla
 #openstack-kubernetes
 #openstack-kuryr
+#openstack-latinamerica
 #openstack-lbaas
 #openstack-loci
 #openstack-manila
@@ -132,6 +135,7 @@
 #openstack-security
 #openstack-self-healing
 #openstack-shade
+#openstack-skyline
 #openstack-smaug
 #openstack-solar
 #openstack-sprint
@@ -153,6 +157,7 @@
 #openstack-ux
 #openstack-valence
 #openstack-valet
+#openstack-venus
 #openstack-vitrage
 #openstack-vmware-nsx
 #openstack-vpnaas
@@ -174,5 +179,6 @@
 #storyboard
 #swift3
 #tacker
+#test
 #tripleo
 #zuul

@@ -7,7 +7,7 @@ import utils
 es = utils.get_elastic_client()
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 def main():
     r = es.count(index="email")
     total = r["count"]

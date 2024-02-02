@@ -18,7 +18,8 @@ es_client = utils.get_elastic_client()
 with open("CHANNELS") as ff:
     CHANNELS = [chan.strip() for chan in ff.readlines()]
 DEFAULT_START_DATE = dt.date(2017, 1, 1)
-URI_PAT = "http://eavesdrop.openstack.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
+# URI_PAT = "http://eavesdrop.openstack.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
+URI_PAT = "https://meetings.opendev.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
 NICK_PAT = re.compile(r"<([^>]+)> (.*)")
 ONEDAY = dt.timedelta(days=1)
 ctl_chars = dict.fromkeys(range(32))

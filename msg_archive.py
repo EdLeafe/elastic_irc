@@ -73,7 +73,7 @@ def get_data(currmsg=0, verbose=False):
             }
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("--start", "-s", help="Start importing messages after this msgnum or date")
 def main(start):
     currmsg = _get_start_msg(start)

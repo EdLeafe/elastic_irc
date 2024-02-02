@@ -33,7 +33,7 @@ def print_rec(rec):
     console.print(table)
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.argument("msg_num")
 @click.option(
     "--delete",
