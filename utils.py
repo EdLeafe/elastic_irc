@@ -147,8 +147,8 @@ def format_number(num):
     return ",".join(parts)
 
 
-def get_elastic_client():
-    return elasticsearch.Elasticsearch(host=HOST)
+def get_elastic_client(timeout=None):
+    return elasticsearch.Elasticsearch(host=HOST, request_timeout=timeout)
 
 
 def _get_mapping():
