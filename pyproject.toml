@@ -25,7 +25,6 @@ version = "1.0.0"
 description = ""
 authors = ["EdLeafe <ed@leafe.com>"]
 readme = "README.md"
-packages = [{include = "elastic_irc"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
