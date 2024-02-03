@@ -1,4 +1,3 @@
-import aiohttp
 import asyncio
 import datetime as dt
 import json
@@ -8,6 +7,7 @@ import time
 from urllib.parse import quote
 
 import click
+import httpx
 
 import utils
 
@@ -21,14 +21,16 @@ def output(*msgs):
         print(" ".join(msgs))
 
 
-with open("CHANNELS") as ff:
-    CHANNELS = [chan.strip() for chan in ff.readlines()]
-DEFAULT_START_DATE = dt.date(2020, 1, 1)
-NUM_CONCURRENT = 10
+DEFAULT_START_DATE = dt.datetime(2020, 1, 1)
+NUM_CONCURRENT = 20
+TIMEOUT = 30
 
-# URI_PAT = "http://eavesdrop.openstack.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
-URI_PAT = "https://meetings.opendev.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
+URI_PAT = (
+    "https://meetings.opendev.org/irclogs/%(esc_chan)s/%(esc_chan)s.%(year)s-%(month)s-%(day)s.log"
+)
 NICK_PAT = re.compile(r"<([^>]+)> (.*)")
+CHANNEL_URI = "https://meetings.opendev.org/irclogs/"
+CHANNEL_PAT = re.compile(r'<a href="(%23[a-z0-9_-]+)/">')
 ONEDAY = dt.timedelta(days=1)
 ctl_chars = dict.fromkeys(range(32))
 del ctl_chars[10], ctl_chars[13]
@@ -40,6 +42,17 @@ SPAM_FILE = os.path.join(os.getcwd(), "SPAM_PHRASES")
 ignored_nicks = set()
 with open(SPAM_FILE, "r") as ff:
     spam_phrases = [ln for ln in ff.read().splitlines() if ln]
+
+
+def _get_channels():
+    channels = []
+    resp = httpx.get(CHANNEL_URI)
+    for ln in resp.text.splitlines():
+        mtch = CHANNEL_PAT.search(ln)
+        if mtch:
+            chan = mtch.groups()[0].replace("%23", "#")
+            channels.append(chan)
+    return channels
 
 
 def from_time(val):
@@ -68,7 +81,7 @@ def ignore_spam(nick, remark):
 
 
 async def get_data(name, start_day, end_day, queue):
-    async with aiohttp.ClientSession() as session:
+    async with httpx.AsyncClient(timeout=TIMEOUT) as session:
         updates = []
         while True:
             channel = await queue.get()
@@ -87,14 +100,14 @@ async def get_data(name, start_day, end_day, queue):
                 retries = 3
                 while retries:
                     try:
-                        async with session.get(uri) as resp:
-                            status_code = resp.status
-                            try:
-                                resp_text = await resp.text()
-                            except UnicodeDecodeError:
-                                resp_text = ""
+                        resp = await session.get(uri)
+                        status_code = resp.status_code
+                        try:
+                            resp_text = resp.text
+                        except UnicodeDecodeError:
+                            resp_text = ""
                         break
-                    except aiohttp.ClientConnectionError as e:
+                    except (httpx.ConnectError, httpx.RemoteProtocolError) as e:
                         output(f"Failed '{e}'; retrying...")
                         await asyncio.sleep((5 - retries) ** 2)
                         retries -= 1
@@ -141,21 +154,20 @@ async def get_data(name, start_day, end_day, queue):
 async def post_updates(name, updates, session):
     data = "\n".join(updates) + "\n"
     output("POSTING UPDATE", data)
-    async with session.post(
+    resp = await session.post(
         "http://dodata:9200/irclog/_bulk",
         headers={"Content-Type": "application/x-ndjson"},
         data=data,
         timeout=30,
-    ) as resp:
-        if resp.status != 200:
-            cnt = await resp.content.read()
-            output(f"BAD POST: {resp.status} -- {cnt}")
+    )
+    if resp.status_code != 200:
+        output(f"BAD POST: {resp.status_code} -- {resp.text}")
 
 
 async def main_runner(start=None, end=None, chan=None, quiet=False):
     start_day = dt.datetime.strptime(start, "%Y-%m-%d") if start else DEFAULT_START_DATE
     end_day = dt.datetime.strptime(end, "%Y-%m-%d") if end else dt.datetime.now()
-    channels = [chan] if chan else CHANNELS
+    channels = [chan] if chan else _get_channels()
 
     global print_output
     print_output = not quiet

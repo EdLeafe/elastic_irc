@@ -10,7 +10,7 @@ import uuid
 import warnings
 
 from dateutil import parser
-import elasticsearch
+import elasticsearch7 as elasticsearch
 import pymysql
 from rich import box
 from rich.console import Console
