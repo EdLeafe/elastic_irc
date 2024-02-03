@@ -10,7 +10,7 @@ import uuid
 import warnings
 
 from dateutil import parser
-import elasticsearch
+import elasticsearch7 as elasticsearch
 import pymysql
 from rich import box
 from rich.console import Console
@@ -150,8 +150,8 @@ def format_number(num):
     return ",".join(parts)
 
 
-def get_elastic_client():
-    return elasticsearch.Elasticsearch(host=HOST)
+def get_elastic_client(timeout=None):
+    return elasticsearch.Elasticsearch(host=HOST, request_timeout=timeout)
 
 
 def _get_mapping():
@@ -225,6 +225,7 @@ def print_message_list(recs):
     console = Console()
     table = Table(show_header=True, header_style="bold cyan", box=box.HEAVY)
     #    table.add_column("ID", style="dim", width=13)
+    table.add_column("ID")
     table.add_column("MSG #")
     table.add_column("List")
     table.add_column("Posted")
@@ -240,6 +241,7 @@ def print_message_list(recs):
         if low_subj.startswith("re:") or low_subj.startswith("aw:"):
             subj = f"[green]{subj[:3]}[/green]{subj[3:]}"
         table.add_row(
+            str(rec["id"]),
             str(rec["msg_num"]),
             ABBREV_MAP.get(rec["list_name"]),
             rec["posted"],

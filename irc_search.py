@@ -13,7 +13,7 @@ def write_to_file(recs, output_file):
         ff.write("\n".join(data))
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.argument("field", nargs=-1)
 @click.argument("val", nargs=1)
 @click.option("--num", "-n", default=10, help="Maximum number of records to return")

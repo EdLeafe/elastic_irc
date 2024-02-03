@@ -20,7 +20,7 @@ field_map = {
 }
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.argument("field", type=click.Choice(field_map.keys()), nargs=-1)
 @click.argument("value", nargs=1)
 @click.option("--num", "-n", default=10, help="Maximum number of records to return")

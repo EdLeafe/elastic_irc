@@ -9,7 +9,7 @@ MAX_RECS = 10000
 es = utils.get_elastic_client()
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("--delete", "-d", help="Delete the records on the specified date")
 @click.argument("logdate")
 @click.option(
