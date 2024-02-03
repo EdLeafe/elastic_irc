@@ -34,6 +34,7 @@ pymysql = "^1.1.0"
 rich = "^13.7.0"
 click = "^8.1.7"
 elasticsearch7 = "^7.17.9"
+requests = "^2.27.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest-pudb = "^0.7.0"
