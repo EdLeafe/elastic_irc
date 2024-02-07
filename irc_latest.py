@@ -10,12 +10,14 @@ import utils
 
 def get_latest(num, chan, gerrit=True):
     es = utils.get_elastic_client()
+    sort = {"posted": {"order": "desc"}}
+    query = {}
     if chan or gerrit:
-        body = {"query": {"bool": {}}}
+        query = {"bool": {}}
         if chan:
-            body["query"]["bool"]["must"] = {"match": {"channel": chan}}
+            query["bool"]["must"] = {"match": {"channel": chan}}
         if gerrit:
-            body["query"]["bool"]["must_not"] = {
+            query["bool"]["must_not"] = {
                 "bool": {
                     "should": [
                         {"match": {"nick": "openstackgerrit"}},
@@ -24,9 +26,9 @@ def get_latest(num, chan, gerrit=True):
                     ]
                 }
             }
-        r = es.search(index="irclog", body=body, size=num, sort="posted:desc")
+        r = es.search(index="irclog", query=query, sort=sort, size=num)
     else:
-        r = es.search(index="irclog", size=num, sort="posted:desc")
+        r = es.search(index="irclog", sort=sort, size=num)
 
     records = utils.extract_records(r)
     utils.massage_date_records(records, "posted")

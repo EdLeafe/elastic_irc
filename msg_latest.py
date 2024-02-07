@@ -19,12 +19,13 @@ LIST_MAP = {val: key for key, val in ABBREV_MAP.items()}
 
 def get_latest(num, list_name):
     es = utils.get_elastic_client()
+    sort = {"posted": {"order": "desc"}}
     if list_name:
         list_abbrev = LIST_MAP.get(list_name, list_name[0])
-        body = {"query": {"match": {"list_name": list_abbrev}}}
-        r = es.search(index="email", body=body, size=num, sort="posted:desc")
+        query = {"match": {"list_name": list_abbrev}}
+        r = es.search(index="email", query=query, size=num, sort=sort)
     else:
-        r = es.search(index="email", size=num, sort="posted:desc")
+        r = es.search(index="email", size=num, sort=sort)
 
     records = utils.extract_records(r)
     utils.massage_date_records(records, "posted")
