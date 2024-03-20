@@ -39,7 +39,7 @@ requests = "^2.27.1"
 [tool.poetry.group.dev.dependencies]
 pytest-pudb = "^0.7.0"
 ipython = "^8.21.0"
-black = "^24.1.1"
+black = "^24.3.0"
 
 [build-system]
 requires = ["poetry-core"]
