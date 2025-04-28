@@ -24,9 +24,7 @@ def main(logdate, delete=False, show=False):
     nextdate = conv_next.strftime("%Y-%m-%d")
     mthd = es.delete_by_query if delete else es.search
 
-    kwargs = {
-        "body": {"query": {"range": {"posted": {"gte": logdate, "lt": nextdate}}}},
-    }
+    kwargs = {"query": {"range": {"posted": {"gte": logdate, "lt": nextdate}}}}
     kwargs["size"] = MAX_RECS
     r = mthd(index="email", **kwargs)
     if delete:

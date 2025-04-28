@@ -20,7 +20,7 @@ def main(start, delete):
         kwargs["sort"] = [{"posted": "asc"}]
         kwargs["size"] = MAX_RECS
 
-    r = mthd(index="email", body=kwargs)
+    r = mthd(index="email", **kwargs)
     if delete:
         print("%s records have been deleted." % r.get("deleted"))
     else:

@@ -2,7 +2,7 @@ import datetime
 import sys
 
 import click
-from elasticsearch.helpers import bulk
+from elasticsearch7.helpers import bulk
 
 import utils
 

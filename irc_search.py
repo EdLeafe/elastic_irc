@@ -62,9 +62,9 @@ def main(field, val, num, chan, column, output_file):
             }
         }
     else:
-        kwargs = {"body": {"query": expr}}
+        kwargs = {"query": expr}
     kwargs["size"] = num
-    kwargs["sort"] = ["posted:desc"]
+    kwargs["sort"] = [{"posted": "desc"}]
     if column:
         kwargs["_source"] = column
 

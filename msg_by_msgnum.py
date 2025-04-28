@@ -45,7 +45,7 @@ def print_rec(rec):
 )
 def main(msg_num, delete=False):
     mthd = es.delete_by_query if delete else es.search
-    kwargs = {"body": {"query": {"match": {"msg_num": msg_num}}}}
+    kwargs = {"query": {"match": {"msg_num": msg_num}}}
 
     r = mthd(index="email", **kwargs)
     if delete:

@@ -24,7 +24,7 @@ def main(log_id, delete=False):
 def run_by_id(log_id, delete=False):
     mthd = es.delete_by_query if delete else es.search
 
-    kwargs = {"body": {"query": {"match": {"id": log_id}}}}
+    kwargs = {"query": {"match": {"id": log_id}}}
 
     r = mthd(index="irclog", **kwargs)
     if delete:

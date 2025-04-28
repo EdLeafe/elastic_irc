@@ -129,7 +129,7 @@ def human_fmt(num):
     units = list(zip(["bytes", "K", "MB", "GB", "TB", "PB"], [0, 0, 1, 2, 2, 2]))
     if num > 1:
         exponent = min(int(log(num, 1024)), len(units) - 1)
-        quotient = float(num) / 1024 ** exponent
+        quotient = float(num) / 1024**exponent
         unit, num_decimals = units[exponent]
         format_string = "{:.%sf} {}" % (num_decimals)
         return format_string.format(quotient, unit)

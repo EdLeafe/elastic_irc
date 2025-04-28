@@ -21,23 +21,19 @@ def main(logdate, chan="", delete=False):
 
     if chan:
         kwargs = {
-            "body": {
-                "query": {
-                    "bool": {
-                        "filter": {"term": {"channel": chan}},
-                        "must": {"range": {"posted": {"gte": logdate, "lt": nextdate}}},
-                    }
+            "query": {
+                "bool": {
+                    "filter": {"term": {"channel": chan}},
+                    "must": {"range": {"posted": {"gte": logdate, "lt": nextdate}}},
                 }
             }
         }
     else:
-        kwargs = {
-            "body": {"query": {"range": {"posted": {"gte": logdate, "lt": nextdate}}}},
-        }
+        kwargs = {"query": {"range": {"posted": {"gte": logdate, "lt": nextdate}}}}
 
     kwargs["size"] = MAX_RECS
     if not delete:
-        kwargs["sort"] = ["posted:asc"]
+        kwargs["sort"] = [{"posted": "asc"}]
         kwargs["_source"] = ["id"]
 
     r = mthd(index="irclog", **kwargs)
